@@ -1,0 +1,106 @@
+# Multi-environment Terraform/Terragrunt deploy template.
+# Assumes .aws-auth from aws-oidc.yml is included alongside.
+# Adapt: TG_DIR, AWS_ROLE_ARN per env, plan-comment script path.
+
+stages:
+  - validate
+  - plan
+  - apply
+
+variables:
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "0"
+  TG_NON_INTERACTIVE: "1"
+
+.terraform-base:
+  extends: .aws-auth
+  image:
+    name: alpine/terragrunt:1.9.0
+    entrypoint: [""]
+  cache:
+    key: terraform-${CI_COMMIT_REF_SLUG}
+    paths:
+      - "**/.terragrunt-cache/"
+      - "**/.terraform/"
+    policy: pull-push
+
+# ---------- validate ----------
+tf_fmt:
+  stage: validate
+  extends: .terraform-base
+  script:
+    - terragrunt hcl fmt --check --diff
+    - terraform fmt -check -recursive
+  needs: []
+
+tf_validate:
+  stage: validate
+  extends: .terraform-base
+  script:
+    - cd "${TG_DIR}"
+    - terragrunt run-all validate
+  needs: []
+
+# ---------- plan ----------
+tf_plan:
+  stage: plan
+  extends: .terraform-base
+  script:
+    - cd "${TG_DIR}"
+    - terragrunt run-all plan -out=tfplan -no-color | tee plan.txt
+    - ./scripts/post-plan-comment.sh plan.txt    # MR-comment integration
+  artifacts:
+    paths:
+      - "**/tfplan"
+      - "**/plan.txt"
+    expire_in: 1 week
+    reports:
+      terraform: "**/tfplan.json"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# ---------- apply ----------
+.tf_apply:
+  stage: apply
+  extends: .terraform-base
+  script:
+    - cd "${TG_DIR}"
+    - terragrunt run-all apply tfplan
+
+tf_apply_dev:
+  extends: .tf_apply
+  variables:
+    AWS_ROLE_ARN: arn:aws:iam::111111111111:role/gitlab-deploy-dev
+    TG_DIR: live/dev
+  environment:
+    name: dev
+  needs: [tf_plan]
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+tf_apply_staging:
+  extends: .tf_apply
+  variables:
+    AWS_ROLE_ARN: arn:aws:iam::222222222222:role/gitlab-deploy-staging
+    TG_DIR: live/staging
+  environment:
+    name: staging
+  needs: [tf_apply_dev]
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+
+tf_apply_prod:
+  extends: .tf_apply
+  variables:
+    AWS_ROLE_ARN: arn:aws:iam::333333333333:role/gitlab-deploy-prod
+    TG_DIR: live/prod
+  environment:
+    name: production
+  resource_group: production    # serialise prod applies
+  needs: [tf_apply_staging]
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
+      when: manual
+      allow_failure: false

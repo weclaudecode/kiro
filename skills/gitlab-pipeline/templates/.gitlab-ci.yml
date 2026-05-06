@@ -1,0 +1,56 @@
+# Thin root pipeline. Job definitions live in includes.
+# Adapt: project paths, component versions, stage list.
+
+include:
+  # 1. Local includes — files in this repo under .gitlab/ci/
+  - local: .gitlab/ci/build.yml
+  - local: .gitlab/ci/test.yml
+  - local: .gitlab/ci/deploy.yml
+
+  # 2. Project includes — pinned to a tag (never `main`)
+  - project: platform/ci-templates
+    ref: v3.2.0
+    file:
+      - /templates/aws-oidc.yml
+      - /templates/security-scans.yml
+
+  # 3. CI/CD Component (GitLab 17+) — typed inputs, semver-pinned
+  - component: $CI_SERVER_FQDN/platform/ci-components/docker-build@1.4.0
+    inputs:
+      image: $CI_REGISTRY_IMAGE
+      dockerfile: ./Dockerfile
+      context: .
+
+  # 4. Built-in templates
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
+
+# Gate the entire pipeline. Without this, pushes to MR branches create
+# duplicate pipelines (one branch + one MR).
+workflow:
+  rules:
+    - if: $CI_COMMIT_TITLE =~ /^docs:/
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG
+    - when: never
+
+default:
+  image: alpine:3.20
+  interruptible: true
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+      - scheduler_failure
+
+stages:
+  - prepare
+  - build
+  - test
+  - scan
+  - publish
+  - deploy
+  - verify

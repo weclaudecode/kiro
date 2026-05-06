@@ -1,0 +1,35 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "GitLabOIDCMainBranch",
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::123456789012:oidc-provider/gitlab.example.com"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "gitlab.example.com:aud": "https://gitlab.example.com"
+        },
+        "StringLike": {
+          "gitlab.example.com:sub": "project_path:platform/payments:ref_type:branch:ref:main"
+        }
+      }
+    },
+    {
+      "Sid": "GitLabOIDCEnvironmentBound",
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::123456789012:oidc-provider/gitlab.example.com"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "gitlab.example.com:aud": "https://gitlab.example.com",
+          "gitlab.example.com:sub": "project_path:platform/payments:environment:production"
+        }
+      }
+    }
+  ]
+}

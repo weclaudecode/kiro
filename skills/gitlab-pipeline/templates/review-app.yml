@@ -1,0 +1,34 @@
+# Dynamic environment / review-app template.
+# Adapt: deploy script paths, base review domain, auto_stop window.
+
+review_app:
+  stage: deploy
+  extends: .aws-auth
+  variables:
+    AWS_ROLE_ARN: arn:aws:iam::111111111111:role/gitlab-deploy-review
+  environment:
+    name: review/$CI_COMMIT_REF_SLUG
+    url: https://${CI_COMMIT_REF_SLUG}.review.example.com
+    on_stop: stop_review_app
+    auto_stop_in: 1 week
+    deployment_tier: development
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  script:
+    - ./scripts/deploy-review.sh "$CI_COMMIT_REF_SLUG"
+
+stop_review_app:
+  stage: deploy
+  extends: .aws-auth
+  variables:
+    AWS_ROLE_ARN: arn:aws:iam::111111111111:role/gitlab-deploy-review
+    GIT_STRATEGY: none      # branch may be gone by the time stop runs
+  environment:
+    name: review/$CI_COMMIT_REF_SLUG
+    action: stop
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: manual
+      allow_failure: true
+  script:
+    - ./scripts/teardown-review.sh "$CI_COMMIT_REF_SLUG"

@@ -1,0 +1,58 @@
+# PEP 621 project metadata for a Python 3.11+ AWS automation CLI.
+# Build backend: hatchling. Lockfile: uv (run `uv lock` to generate uv.lock).
+# Layout assumes src/mytool/ — adjust the package name throughout.
+
+[project]
+name = "mytool"
+version = "0.1.0"
+description = "Internal AWS automation CLI"
+requires-python = ">=3.11"
+dependencies = [
+    # boto3 + stubs for typed clients (mypy --strict compatible)
+    "boto3>=1.34",
+    "botocore>=1.34",
+    "boto3-stubs[essential]>=1.34",
+    # Structured JSON logging
+    "structlog>=24.1",
+    # Type-hint-driven CLI
+    "typer>=0.12",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    # In-memory AWS mock for behavior tests
+    "moto[all]>=5.0",
+    "mypy>=1.10",
+    # Lint + format (replaces black, isort, flake8, etc.)
+    "ruff>=0.5",
+]
+
+# `mytool` console script becomes available after `uv pip install .`
+[project.scripts]
+mytool = "mytool.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mytool"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+# E/F = pycodestyle/pyflakes; I = isort; B = bugbear; UP = pyupgrade;
+# S = bandit security; N = pep8-naming; RET = return; SIM = simplify
+select = ["E", "F", "I", "B", "UP", "S", "N", "RET", "SIM"]
+
+[tool.mypy]
+strict = true
+python_version = "3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"

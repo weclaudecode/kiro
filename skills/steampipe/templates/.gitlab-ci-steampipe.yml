@@ -1,0 +1,91 @@
+# GitLab CI fragment: scheduled compliance scan with Steampipe + Powerpipe.
+#
+# Drop this stage into the project's `.gitlab-ci.yml` (or `include:` it).
+# Pairs with the runner / OIDC patterns in the `gitlab-pipeline` skill and
+# the audit role layout in `terragrunt-multi-account`.
+#
+# What it does:
+#   1. Federates from GitLab's OIDC token into a read-only audit role in AWS.
+#   2. Installs the AWS Steampipe plugin and starts service mode.
+#   3. Runs a CIS v3.0 benchmark with ASFF output (Security Hub format).
+#   4. Runs an ad-hoc query for public S3 buckets, JSON output.
+#   5. Uploads both artifacts.
+#   6. Fails the job if the public-bucket query returned any rows.
+
+stages:
+  - compliance
+
+variables:
+  # ARN of the read-only audit role to assume in the audit account.
+  # Set this as a GitLab CI/CD variable (masked, not protected if you want
+  # branch coverage). Trust policy on the role must allow GitLab's OIDC
+  # provider with a `sub` condition matching this project.
+  AUDIT_ROLE_ARN: "arn:aws:iam::111111111111:role/GitLabComplianceAudit"
+  AWS_DEFAULT_REGION: "us-east-1"
+
+compliance-scan:
+  stage: compliance
+  image: turbot/steampipe:latest
+
+  # Request a GitLab-issued OIDC token usable for AWS STS web identity.
+  id_tokens:
+    GITLAB_OIDC_TOKEN:
+      aud: https://gitlab.com
+
+  before_script:
+    # turbot/steampipe is Alpine-based.
+    - apk add --no-cache aws-cli jq
+
+    # Federate into the audit role.
+    - >
+      aws sts assume-role-with-web-identity
+      --role-arn "$AUDIT_ROLE_ARN"
+      --role-session-name "gitlab-ci-${CI_JOB_ID}"
+      --web-identity-token "$GITLAB_OIDC_TOKEN"
+      --duration-seconds 3600 > /tmp/creds.json
+
+    - export AWS_ACCESS_KEY_ID=$(jq -r .Credentials.AccessKeyId     /tmp/creds.json)
+    - export AWS_SECRET_ACCESS_KEY=$(jq -r .Credentials.SecretAccessKey /tmp/creds.json)
+    - export AWS_SESSION_TOKEN=$(jq -r .Credentials.SessionToken    /tmp/creds.json)
+
+    # Install the AWS plugin. With the cache below this is a no-op after run 1.
+    - steampipe plugin install aws
+
+  script:
+    # One service for all queries in the job.
+    - steampipe service start
+
+    # Ad-hoc query: any public S3 buckets in the account?
+    - >
+      steampipe query
+      "select account_id, name, region from aws_s3_bucket where bucket_policy_is_public"
+      --output json > findings.json
+
+    # Full CIS v3.0 benchmark, ASFF for downstream Security Hub upload.
+    - >
+      powerpipe benchmark run aws_compliance.benchmark.cis_v300
+      --output asff > cis-findings.json
+
+    # Fail the job if any public-bucket rows were returned. `jq length` on
+    # the rows array is more reliable than `wc -l` when output is pretty-printed.
+    - test "$(jq '.rows | length' findings.json)" = "0"
+
+  after_script:
+    - steampipe service stop || true
+
+  cache:
+    # Cache the plugin binary between runs to skip the install step.
+    key: steampipe-plugins-aws
+    paths:
+      - .steampipe/plugins/
+
+  artifacts:
+    when: always
+    expire_in: 30 days
+    paths:
+      - findings.json
+      - cis-findings.json
+
+  # Run on a GitLab pipeline schedule rather than every push.
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"

@@ -1,0 +1,136 @@
+# .gitlab-ci-terragrunt.yml
+#
+# GitLab CI fragment for running Terragrunt against multi-account AWS.
+# Include from .gitlab-ci.yml:
+#
+#   include:
+#     - local: '.gitlab-ci-terragrunt.yml'
+#
+# Authentication uses GitLab OIDC into TerraformDeploymentRole in the
+# deployment account. The generated AWS provider chains assume_role into
+# each workload account's TerraformExecutionRole.
+
+stages:
+  - validate
+  - plan
+  - apply
+
+variables:
+  TERRAGRUNT_VERSION: "0.66.9"
+  TERRAFORM_VERSION:  "1.9.5"
+  AWS_REGION:         "us-east-1"
+  AWS_DEFAULT_REGION: "us-east-1"
+  # TG_DIR is set per-job to scope run-all to a single account/region/unit.
+  # Example values: "live/prod/us-east-1", "live/prod/us-east-1/vpc".
+  TG_DIR:             "live"
+  TG_FLAGS:           "--terragrunt-non-interactive --terragrunt-log-level info"
+
+# ---------------------------------------------------------------------------
+# Base job: container image, OIDC token, AWS credentials.
+# ---------------------------------------------------------------------------
+.terragrunt:
+  image:
+    name: alpine/terragrunt:${TERRAFORM_VERSION}
+    entrypoint: [""]
+  id_tokens:
+    AWS_OIDC_TOKEN:
+      aud: https://gitlab.com
+  before_script:
+    - apk add --no-cache aws-cli jq bash git
+    - |
+      CREDS=$(aws sts assume-role-with-web-identity \
+        --role-arn "${AWS_DEPLOYMENT_ROLE_ARN}" \
+        --role-session-name "gitlab-${CI_PIPELINE_ID}" \
+        --web-identity-token "${AWS_OIDC_TOKEN}" \
+        --duration-seconds 3600 \
+        --query 'Credentials' --output json)
+      export AWS_ACCESS_KEY_ID=$(echo "$CREDS" | jq -r .AccessKeyId)
+      export AWS_SECRET_ACCESS_KEY=$(echo "$CREDS" | jq -r .SecretAccessKey)
+      export AWS_SESSION_TOKEN=$(echo "$CREDS" | jq -r .SessionToken)
+    - aws sts get-caller-identity
+    - terragrunt --version
+    - terraform --version
+
+# ---------------------------------------------------------------------------
+# Validate — runs on every MR and default branch push.
+# ---------------------------------------------------------------------------
+terragrunt:validate:
+  extends: .terragrunt
+  stage: validate
+  script:
+    - cd ${TG_DIR}
+    - terragrunt hclfmt --terragrunt-check
+    - terragrunt run-all validate ${TG_FLAGS}
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+# ---------------------------------------------------------------------------
+# Plan — runs on every MR. Saves plan binaries as artifacts so apply can
+# consume them without re-planning.
+# ---------------------------------------------------------------------------
+terragrunt:plan:
+  extends: .terragrunt
+  stage: plan
+  script:
+    - cd ${TG_DIR}
+    - |
+      if [ -x "$CI_PROJECT_DIR/scripts/detect-changed-units.sh" ]; then
+        INCLUDE_ARGS=$("$CI_PROJECT_DIR/scripts/detect-changed-units.sh")
+      else
+        INCLUDE_ARGS=""
+      fi
+    - terragrunt run-all plan -out=tfplan ${TG_FLAGS} ${INCLUDE_ARGS}
+  artifacts:
+    paths:
+      - ${TG_DIR}/**/.terragrunt-cache/**/tfplan
+    expire_in: 7 days
+    when: always
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+# ---------------------------------------------------------------------------
+# Apply jobs. One per environment; nonprod auto-runs on default branch,
+# prod is a manual gate. resource_group serialises concurrent applies
+# against the same backend.
+# ---------------------------------------------------------------------------
+terragrunt:apply:nonprod:
+  extends: .terragrunt
+  stage: apply
+  variables:
+    TG_DIR: "live/nonprod"
+  script:
+    - cd ${TG_DIR}
+    - terragrunt run-all apply ${TG_FLAGS}
+  resource_group: terragrunt-nonprod
+  environment:
+    name: nonprod
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: on_success
+
+terragrunt:apply:prod:
+  extends: .terragrunt
+  stage: apply
+  variables:
+    TG_DIR: "live/prod"
+  script:
+    - cd ${TG_DIR}
+    # Prod applies are per-unit: pipeline operator passes TG_UNIT in the
+    # manual run form (e.g. "us-east-1/vpc"). Bare run-all apply on prod
+    # is intentionally not supported here.
+    - |
+      if [ -z "${TG_UNIT:-}" ]; then
+        echo "TG_UNIT must be set for prod apply (e.g. us-east-1/vpc)" >&2
+        exit 1
+      fi
+    - cd "${TG_UNIT}"
+    - terragrunt apply ${TG_FLAGS}
+  resource_group: terragrunt-prod
+  environment:
+    name: prod
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: manual
+      allow_failure: false

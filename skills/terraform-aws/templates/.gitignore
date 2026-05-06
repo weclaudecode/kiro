@@ -1,0 +1,44 @@
+# Local .terraform directories
+**/.terraform/*
+
+# .tfstate files — must never be committed; remote state lives in S3
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Plan output files — usually contain sensitive values
+*.tfplan
+*.tfplan.*
+
+# Override files (developers can use these locally)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI configuration files
+.terraformrc
+terraform.rc
+
+# Lock files: do commit .terraform.lock.hcl (provider lockfile).
+# Do NOT ignore it — uncomment only if a deliberate policy decision says so.
+# .terraform.lock.hcl
+
+# .tfvars files frequently contain secrets (DB passwords, API keys).
+# As a default, ignore them and source secrets from Secrets Manager / SSM
+# at apply time. Commit *.auto.tfvars files only if they hold non-sensitive
+# defaults that every user of this stack should share.
+*.tfvars
+*.tfvars.json
+!*.auto.tfvars
+!*.auto.tfvars.json
+
+# Editor / OS noise
+.DS_Store
+.idea/
+.vscode/
+*.swp
