@@ -1,0 +1,17 @@
+{
+  "_install_path": "<project>/.kiro/hooks/  (Kiro IDE only — CLI ignores file-event hooks)",
+  "_doc": "Runs terraform fmt + terragrunt hclfmt when an .tf or .hcl file is saved. Project-scoped so it doesn't fire on every repo on disk. Verify the trigger schema against your installed kiro version (kirodotdev/Kiro docs > Hooks > Types).",
+  "name": "pre-commit-tf-fmt",
+  "description": "Auto-format Terraform and Terragrunt files on save",
+  "trigger": "fileSave",
+  "fileMatchPattern": [
+    "**/*.tf",
+    "**/*.hcl"
+  ],
+  "action": {
+    "type": "runCommand",
+    "command": "if [[ \"$KIRO_FILE\" == *.tf ]]; then terraform fmt \"$KIRO_FILE\"; else terragrunt hclfmt \"$KIRO_FILE\"; fi",
+    "shell": "bash",
+    "timeoutMs": 10000
+  }
+}

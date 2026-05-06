@@ -1,0 +1,46 @@
+{
+  "_install_path": "~/.kiro/settings/mcp.json  OR  <project>/.kiro/settings/mcp.json",
+  "_doc": "MCP server registry for kiro-cli. SECRETS: never hardcode — use ${ENV_VAR} placeholders, populate the env via direnv (project) or ~/.config/claude/secrets.env (global). Workspace mcp.json overrides global on conflict.",
+  "mcpServers": {
+    "aws-api": {
+      "command": "uvx",
+      "args": ["awslabs.aws-api-mcp-server"],
+      "env": {
+        "AWS_REGION": "${AWS_REGION}",
+        "AWS_PROFILE": "${AWS_PROFILE}"
+      },
+      "disabled": false,
+      "autoApprove": ["call_aws"],
+      "timeout": 120000
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"],
+      "env": {
+        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}"
+      },
+      "disabled": false,
+      "autoApprove": ["resolve-library-id", "get-library-docs"],
+      "timeout": 60000
+    },
+    "gitlab": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-gitlab"],
+      "env": {
+        "GITLAB_PERSONAL_ACCESS_TOKEN": "${GITLAB_TOKEN}",
+        "GITLAB_API_URL": "${GITLAB_API_URL}"
+      },
+      "disabled": false,
+      "autoApprove": [],
+      "timeout": 60000
+    },
+    "terraform": {
+      "command": "uvx",
+      "args": ["awslabs.terraform-mcp-server"],
+      "env": {},
+      "disabled": false,
+      "autoApprove": [],
+      "timeout": 60000
+    }
+  }
+}

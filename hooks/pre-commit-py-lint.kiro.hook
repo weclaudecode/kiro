@@ -1,0 +1,16 @@
+{
+  "_install_path": "<project>/.kiro/hooks/  (Kiro IDE only — CLI ignores file-event hooks)",
+  "_doc": "Runs ruff check (with --fix) on Python files when saved. Verify the trigger schema against your installed kiro version.",
+  "name": "pre-commit-py-lint",
+  "description": "Run ruff on Python files when saved",
+  "trigger": "fileSave",
+  "fileMatchPattern": [
+    "**/*.py"
+  ],
+  "action": {
+    "type": "runCommand",
+    "command": "ruff check --fix \"$KIRO_FILE\" && ruff format \"$KIRO_FILE\"",
+    "shell": "bash",
+    "timeoutMs": 10000
+  }
+}

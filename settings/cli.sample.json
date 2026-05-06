@@ -1,0 +1,29 @@
+{
+  "_install_path": "~/.kiro/settings/cli.json  (global only — there is no project-scoped cli.json)",
+  "_doc": "Starter cli.json. Verify keys against `kiro-cli help settings` on your installed version — schema evolves between releases.",
+  "model": "claude-sonnet-4-6",
+  "theme": "dark",
+  "telemetry": {
+    "enabled": false
+  },
+  "tools": {
+    "autoApprove": {
+      "scope": "read-only",
+      "_doc": "Auto-approves read-class tools (read, @git read-only ops). All write/shell/MCP calls still prompt."
+    }
+  },
+  "context": {
+    "defaultIncludes": [
+      "AGENTS.md",
+      "README.md",
+      ".kiro/steering/**/*.md"
+    ]
+  },
+  "history": {
+    "enabled": true,
+    "maxSessions": 200
+  },
+  "logging": {
+    "level": "info"
+  }
+}

@@ -1,0 +1,41 @@
+# Catalog manifest. Each non-comment line:
+#   <type>|<source path (relative to repo root)>|<dest subpath under .kiro/>
+# type is one of: file | dir
+# Lines starting with # are ignored.
+
+file|steering/tech.md|steering/tech.md
+file|steering/gitops-workflow.md|steering/gitops-workflow.md
+file|steering/secrets-handling.md|steering/secrets-handling.md
+file|steering/aws-security.md|steering/aws-security.md
+file|steering/python-conventions.md|steering/python-conventions.md
+file|steering/terraform-conventions.md|steering/terraform-conventions.md
+file|steering/terragrunt-conventions.md|steering/terragrunt-conventions.md
+file|steering/lambda-conventions.md|steering/lambda-conventions.md
+file|steering/gitlab-ci-conventions.md|steering/gitlab-ci-conventions.md
+
+file|agents/terraform-reviewer.json|agents/terraform-reviewer.json
+file|agents/python-lambda-author.json|agents/python-lambda-author.json
+file|agents/gitlab-ci-engineer.json|agents/gitlab-ci-engineer.json
+file|agents/aws-architect.json|agents/aws-architect.json
+file|agents/security-auditor.json|agents/security-auditor.json
+
+file|prompts/new-lambda.md|prompts/new-lambda.md
+file|prompts/new-terraform-module.md|prompts/new-terraform-module.md
+file|prompts/mr-description.md|prompts/mr-description.md
+file|prompts/review-iac.md|prompts/review-iac.md
+file|prompts/runbook.md|prompts/runbook.md
+
+file|hooks/pre-commit-tf-fmt.kiro.hook|hooks/pre-commit-tf-fmt.kiro.hook
+file|hooks/pre-commit-py-lint.kiro.hook|hooks/pre-commit-py-lint.kiro.hook
+
+file|mcp/mcp.sample.json|settings/mcp.json
+file|settings/cli.sample.json|settings/cli.json
+
+dir|skills/aws-solution-architect|skills/aws-solution-architect
+dir|skills/gitlab-pipeline|skills/gitlab-pipeline
+dir|skills/python-devops-aws|skills/python-devops-aws
+dir|skills/python-lambda|skills/python-lambda
+dir|skills/security-code-reviewer|skills/security-code-reviewer
+dir|skills/steampipe|skills/steampipe
+dir|skills/terraform-aws|skills/terraform-aws
+dir|skills/terragrunt-multi-account|skills/terragrunt-multi-account
