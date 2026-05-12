@@ -15,7 +15,7 @@ auto-installs. You pick the artifacts you want and copy them into either
 | `hooks/` | IDE file-event hook samples + a CLI pre-tool hook snippet | `<project>/.kiro/hooks/` (IDE) or pasted into agent JSON (CLI) |
 | `mcp/` | `mcp.json` sample with placeholders | `~/.kiro/settings/mcp.json` or `<project>/.kiro/settings/mcp.json` |
 | `settings/` | `cli.json` sample (global only) | `~/.kiro/settings/cli.json` |
-| `skills/` | Eight stack-specific skills (already structured for direct copy) | `~/.kiro/skills/<name>/` or `.kiro/skills/<name>/` |
+| `skills/` | Eight stack-specific skills plus `skill-creator` (already structured for direct copy) | `~/.kiro/skills/<name>/` or `.kiro/skills/<name>/` |
 | `scripts/` | `install.sh` + `list.sh` + the manifest | run from this repo |
 
 ## Picking philosophy

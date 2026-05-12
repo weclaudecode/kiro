@@ -28,7 +28,7 @@ cd ~/code/kiro
 | `hooks/` | IDE file-event hooks + a CLI snippet | `<project>/.kiro/hooks/` (IDE) / agent JSON (CLI) |
 | `mcp/` | `mcp.json` sample | `~/.kiro/settings/mcp.json` |
 | `settings/` | `cli.json` sample | `~/.kiro/settings/cli.json` |
-| `skills/` | Eight stack-specific skills | `~/.kiro/skills/<name>/` |
+| `skills/` | Eight stack-specific skills + `skill-creator` for authoring new skills | `~/.kiro/skills/<name>/` |
 | `scripts/` | `install.sh`, `list.sh`, `manifest.txt` | runs from this repo |
 
 ## Documentation

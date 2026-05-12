@@ -44,7 +44,7 @@ When NOT to use:
 2. **Plugin:** `steampipe plugin install aws` (and `terraform`, `github`,
    `kubernetes`, etc. as needed).
 3. **Configure connections** in `~/.steampipe/config/aws.spc` — see
-   `templates/aws.spc` for a multi-account starter.
+   `assets/aws.spc` for a multi-account starter.
 4. **Aggregator:** define a `type = "aggregator"` connection that fans out
    across `aws_*` profiles so one SELECT hits every account.
 5. **Run:** `steampipe query` for the interactive REPL, or
@@ -54,9 +54,9 @@ When NOT to use:
 
 | Template | Purpose |
 |---|---|
-| `templates/aws.spc` | Multi-account `aws.spc` with three named connections plus an aggregator and inline comments for adding new accounts |
-| `templates/custom-control.hcl` | Powerpipe control + benchmark template (public-S3, CloudTrail, IAM-MFA) |
-| `templates/.gitlab-ci-steampipe.yml` | GitLab CI job using `turbot/steampipe:latest`, OIDC into an audit role, ASFF benchmark output, `jq`-based fail-on-findings |
+| `assets/aws.spc` | Multi-account `aws.spc` with three named connections plus an aggregator and inline comments for adding new accounts |
+| `assets/custom-control.hcl` | Powerpipe control + benchmark template (public-S3, CloudTrail, IAM-MFA) |
+| `assets/.gitlab-ci-steampipe.yml` | GitLab CI job using `turbot/steampipe:latest`, OIDC into an audit role, ASFF benchmark output, `jq`-based fail-on-findings |
 
 ## Saved Queries
 

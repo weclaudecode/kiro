@@ -74,8 +74,8 @@ For each boundary, the reviewer confirms:
 ## Phase 5 — Write Findings
 
 - [ ] One finding per issue (grouped only on shared root cause).
-- [ ] Each finding uses the layout in `templates/finding-report.md`.
-- [ ] Severity assigned via `templates/severity-rubric.md`.
+- [ ] Each finding uses the layout in `assets/finding-report.md`.
+- [ ] Severity assigned via `assets/severity-rubric.md`.
 - [ ] Each finding has a reproduction the reviewer has confirmed.
 - [ ] Each finding has a corrected-code remediation.
 - [ ] Each finding has a CWE/OWASP reference.

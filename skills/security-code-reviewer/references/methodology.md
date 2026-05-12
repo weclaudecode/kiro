@@ -1,7 +1,7 @@
 # Methodology — The Five Phases
 
 Security review proceeds in five phases. The reviewer ticks through
-`templates/review-checklist.md` while doing this.
+`assets/review-checklist.md` while doing this.
 
 ## Phase 1 — Scope
 
@@ -69,10 +69,10 @@ These do not start at a request boundary but are equally important:
 
 ## Phase 5 — Write Findings
 
-The reviewer uses `templates/finding-report.md`. One finding per issue.
+The reviewer uses `assets/finding-report.md`. One finding per issue.
 Related findings are grouped under a parent only when they share a single
 root cause and a single fix. Severity is assigned via
-`templates/severity-rubric.md`.
+`assets/severity-rubric.md`.
 
 A single finding's quality is judged by whether a developer can read it,
 locate the file and line, understand the impact, reproduce the issue, and

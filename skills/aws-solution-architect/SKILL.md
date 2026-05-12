@@ -57,10 +57,10 @@ A WAF review is not done until each pillar has documented answers. The output is
 
 | Template | Purpose |
 |---|---|
-| `templates/adr.md` | Architecture Decision Record — Context / Decision / Alternatives / Consequences / References, with a worked Aurora Serverless v2 example at the end |
-| `templates/design-doc.md` | One-page system design doc — problem, constraints, proposed architecture, risks, open questions, cost estimate |
-| `templates/architecture-review-checklist.md` | WAF-driven review checklist organized by the six pillars — ~50 items |
-| `templates/threat-model-worksheet.md` | STRIDE-lite worksheet — per-component spoofing/tampering/repudiation/info-disclosure/DoS/EoP analysis |
+| `assets/adr.md` | Architecture Decision Record — Context / Decision / Alternatives / Consequences / References, with a worked Aurora Serverless v2 example at the end |
+| `assets/design-doc.md` | One-page system design doc — problem, constraints, proposed architecture, risks, open questions, cost estimate |
+| `assets/architecture-review-checklist.md` | WAF-driven review checklist organized by the six pillars — ~50 items |
+| `assets/threat-model-worksheet.md` | STRIDE-lite worksheet — per-component spoofing/tampering/repudiation/info-disclosure/DoS/EoP analysis |
 
 ## References
 

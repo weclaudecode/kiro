@@ -33,7 +33,7 @@ def test_handler_returns_200_for_valid_order():
     assert result["charge_id"] == "ch_abc"
 ```
 
-A more complete `test_handler.py` template — with a `make_context()` factory, sample event fixtures, a `moto` fixture, and both golden-path and error-path tests — is provided in `templates/test_handler.py`.
+A more complete `test_handler.py` template — with a `make_context()` factory, sample event fixtures, a `moto` fixture, and both golden-path and error-path tests — is provided in `assets/test_handler.py`.
 
 ## Mocking AWS calls with `moto`
 

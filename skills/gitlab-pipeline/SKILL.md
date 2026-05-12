@@ -41,11 +41,11 @@ Component by tag.
 
 | File | Purpose |
 |---|---|
-| `templates/.gitlab-ci.yml` | Thin root with `workflow:rules`, `default:`, stages, three `include:` shapes. |
-| `templates/aws-oidc.yml` | `.aws-auth` hidden job using `id_tokens` and `sts assume-role-with-web-identity`. |
-| `templates/terraform-deploy.yml` | `validate`/`plan`/`apply` stages with MR-vs-default-vs-tag rules, manual prod gate, `resource_group` serialisation, MR-comment plan. |
-| `templates/review-app.yml` | Dynamic environment per branch with `on_stop` and `auto_stop_in`. |
-| `templates/aws-trust-policy.json` | IAM trust policy assumable by GitLab OIDC, with `sub`-claim conditions for branch and environment. |
+| `assets/.gitlab-ci.yml` | Thin root with `workflow:rules`, `default:`, stages, three `include:` shapes. |
+| `assets/aws-oidc.yml` | `.aws-auth` hidden job using `id_tokens` and `sts assume-role-with-web-identity`. |
+| `assets/terraform-deploy.yml` | `validate`/`plan`/`apply` stages with MR-vs-default-vs-tag rules, manual prod gate, `resource_group` serialisation, MR-comment plan. |
+| `assets/review-app.yml` | Dynamic environment per branch with `on_stop` and `auto_stop_in`. |
+| `assets/aws-trust-policy.json` | IAM trust policy assumable by GitLab OIDC, with `sub`-claim conditions for branch and environment. |
 
 ## References
 

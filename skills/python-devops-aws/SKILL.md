@@ -32,7 +32,7 @@ Use this skill when:
 
 ## Project skeleton
 
-Use PEP 621 metadata, a lockfile (`uv.lock`), and the `src/` layout. Copy `templates/pyproject.toml` as a starting point — it is wired for `boto3`, `boto3-stubs`, `structlog`, `typer`, `pytest`, `moto`, `mypy`, and `ruff`, with a `[project.scripts]` entry point ready to rename.
+Use PEP 621 metadata, a lockfile (`uv.lock`), and the `src/` layout. Copy `assets/pyproject.toml` as a starting point — it is wired for `boto3`, `boto3-stubs`, `structlog`, `typer`, `pytest`, `moto`, `mypy`, and `ruff`, with a `[project.scripts]` entry point ready to rename.
 
 ## Reusable helpers
 

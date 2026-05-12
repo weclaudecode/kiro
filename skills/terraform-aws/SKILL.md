@@ -40,7 +40,7 @@ Do not use this skill for:
 
 ## Project skeleton
 
-`templates/` contains a ready-to-copy single-environment root module:
+`assets/` contains a ready-to-copy single-environment root module:
 
 | File | Purpose |
 |---|---|
@@ -56,7 +56,7 @@ For when to split files versus extract a module, see `references/project-layout.
 
 ## Module skeleton
 
-`templates/module-skeleton/` is a complete sample module — a "tagged-bucket" with `versions.tf`, `variables.tf` (with `validation` blocks), `main.tf` (correct S3 sibling resources, TLS-only bucket policy, lifecycle rule), `outputs.tf`, and a `README.md` documenting inputs, outputs, and a usage example.
+`assets/module-skeleton/` is a complete sample module — a "tagged-bucket" with `versions.tf`, `variables.tf` (with `validation` blocks), `main.tf` (correct S3 sibling resources, TLS-only bucket policy, lifecycle rule), `outputs.tf`, and a `README.md` documenting inputs, outputs, and a usage example.
 
 For module design rules (when to extract, sources, versioning, provider passing, composition), see `references/modules.md`.
 

@@ -114,5 +114,5 @@ mod "local" {
 }
 ```
 
-See `templates/custom-control.hcl` for a ready-to-adapt control + benchmark
+See `assets/custom-control.hcl` for a ready-to-adapt control + benchmark
 example.

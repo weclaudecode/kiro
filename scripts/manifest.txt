@@ -39,3 +39,4 @@ dir|skills/security-code-reviewer|skills/security-code-reviewer
 dir|skills/steampipe|skills/steampipe
 dir|skills/terraform-aws|skills/terraform-aws
 dir|skills/terragrunt-multi-account|skills/terragrunt-multi-account
+dir|skills/skill-creator|skills/skill-creator
