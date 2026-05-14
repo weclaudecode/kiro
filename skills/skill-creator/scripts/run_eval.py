@@ -1,14 +1,24 @@
 #!/usr/bin/env python3
 """Run trigger evaluation for a skill description.
 
-Tests whether a skill's description causes Claude to trigger (read the skill)
+Tests whether a skill's description causes Kiro to trigger (read the skill)
 for a set of queries. Outputs results as JSON.
+
+CLI assumptions:
+  - Binary defaults to ``kiro-cli`` (override via ``KIRO_CLI_BIN`` env var).
+  - The binary supports the same headless flag surface as Claude Code's
+    ``claude -p``: ``-p <prompt>``, ``--output-format stream-json``,
+    ``--verbose``, ``--include-partial-messages``, ``--model <id>``. If your
+    kiro-cli build diverges, point ``KIRO_CLI_BIN`` at a wrapper that
+    translates flags.
+  - Skills are discovered at ``<project>/.kiro/skills/<name>/SKILL.md``.
 """
 
 import argparse
 import json
 import os
 import select
+import shutil
 import subprocess
 import sys
 import time
@@ -19,13 +29,20 @@ from pathlib import Path
 from scripts.utils import parse_skill_md
 
 
-def find_project_root() -> Path:
-    """Find the project root by walking up from cwd looking for .claude/.
+CLI_BIN = os.environ.get("KIRO_CLI_BIN", "kiro-cli")
 
-    Mimics how Claude Code discovers its project root, so the command file
-    we create ends up where claude -p will look for it.
+
+def find_project_root() -> Path:
+    """Find the project root by walking up from cwd looking for .kiro/.
+
+    Mimics how kiro-cli discovers its project root, so the skill file we
+    create ends up where kiro-cli will look for it. Falls back to .claude/
+    for projects still using the legacy layout, and finally to cwd.
     """
     current = Path.cwd()
+    for parent in [current, *current.parents]:
+        if (parent / ".kiro").is_dir():
+            return parent
     for parent in [current, *current.parents]:
         if (parent / ".claude").is_dir():
             return parent
@@ -42,33 +59,35 @@ def run_single_query(
 ) -> bool:
     """Run a single query and return whether the skill was triggered.
 
-    Creates a command file in .claude/commands/ so it appears in Claude's
-    available_skills list, then runs `claude -p` with the raw query.
-    Uses --include-partial-messages to detect triggering early from
-    stream events (content_block_start) rather than waiting for the
-    full assistant message, which only arrives after tool execution.
+    Stages a temporary skill at ``<project>/.kiro/skills/<unique>/SKILL.md``
+    so it appears in kiro-cli's available_skills list, then runs the binary
+    with the raw query. Uses --include-partial-messages to detect triggering
+    early from stream events (content_block_start) rather than waiting for
+    the full assistant message, which only arrives after tool execution.
     """
     unique_id = uuid.uuid4().hex[:8]
     clean_name = f"{skill_name}-skill-{unique_id}"
-    project_commands_dir = Path(project_root) / ".claude" / "commands"
-    command_file = project_commands_dir / f"{clean_name}.md"
+    skills_root = Path(project_root) / ".kiro" / "skills"
+    skill_dir = skills_root / clean_name
+    skill_file = skill_dir / "SKILL.md"
 
     try:
-        project_commands_dir.mkdir(parents=True, exist_ok=True)
+        skill_dir.mkdir(parents=True, exist_ok=True)
         # Use YAML block scalar to avoid breaking on quotes in description
         indented_desc = "\n  ".join(skill_description.split("\n"))
-        command_content = (
+        skill_content = (
             f"---\n"
+            f"name: {clean_name}\n"
             f"description: |\n"
             f"  {indented_desc}\n"
             f"---\n\n"
             f"# {skill_name}\n\n"
             f"This skill handles: {skill_description}\n"
         )
-        command_file.write_text(command_content)
+        skill_file.write_text(skill_content)
 
         cmd = [
-            "claude",
+            CLI_BIN,
             "-p", query,
             "--output-format", "stream-json",
             "--verbose",
@@ -77,10 +96,13 @@ def run_single_query(
         if model:
             cmd.extend(["--model", model])
 
-        # Remove CLAUDECODE env var to allow nesting claude -p inside a
-        # Claude Code session. The guard is for interactive terminal conflicts;
-        # programmatic subprocess usage is safe.
-        env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
+        # Drop session-detection env vars so a nested kiro-cli (or claude)
+        # invocation doesn't refuse to start. The guard is for interactive
+        # terminal conflicts; programmatic subprocess usage is safe.
+        env = {
+            k: v for k, v in os.environ.items()
+            if k not in ("KIROCLI", "KIRO_CLI", "CLAUDECODE")
+        }
 
         process = subprocess.Popen(
             cmd,
@@ -177,8 +199,14 @@ def run_single_query(
 
         return triggered
     finally:
-        if command_file.exists():
-            command_file.unlink()
+        if skill_dir.exists():
+            shutil.rmtree(skill_dir, ignore_errors=True)
+        # Clean up the parent skills/ dir if we left it empty.
+        try:
+            if skills_root.exists() and not any(skills_root.iterdir()):
+                skills_root.rmdir()
+        except OSError:
+            pass
 
 
 def run_eval(
@@ -265,7 +293,7 @@ def main():
     parser.add_argument("--timeout", type=int, default=30, help="Timeout per query in seconds")
     parser.add_argument("--runs-per-query", type=int, default=3, help="Number of runs per query")
     parser.add_argument("--trigger-threshold", type=float, default=0.5, help="Trigger rate threshold")
-    parser.add_argument("--model", default=None, help="Model to use for claude -p (default: user's configured model)")
+    parser.add_argument("--model", default=None, help="Model to use for kiro-cli -p (default: user's configured model)")
     parser.add_argument("--verbose", action="store_true", help="Print progress to stderr")
     args = parser.parse_args()
 

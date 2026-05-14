@@ -439,6 +439,8 @@ output_path:              my-skill-workspace/iteration-2/eval-0/analysis.json
 
 All scripts are run from the `skill-creator/` directory as modules. `python -m scripts.<name> --help` always works.
 
+**`KIRO_CLI_BIN` env var.** `run_eval.py`, `run_loop.py`, and `improve_description.py` shell out to the kiro-cli binary. Default is `kiro-cli` (must be on `PATH`). Override with `KIRO_CLI_BIN=/path/to/binary` if your build is named differently or you want to point at a wrapper that translates flags. The scripts assume the binary supports the same headless flag surface as Claude Code's `claude -p`: `-p <prompt>`, `--output-format stream-json|text`, `--verbose`, `--include-partial-messages`, `--model <id>`. They also drop the env vars `KIROCLI`, `KIRO_CLI`, and `CLAUDECODE` before invoking, so a nested session won't refuse to start.
+
 ### 5.1 `aggregate_benchmark.py`
 
 Aggregate per-run grading into a single `benchmark.json`.
@@ -485,13 +487,13 @@ When the user clicks **Submit All Reviews**, feedback is saved to `feedback.json
 
 ### 5.3 `run_eval.py`
 
-One-shot trigger evaluation — does Claude actually invoke this skill on the queries?
+One-shot trigger evaluation — does kiro-cli actually invoke this skill on the queries?
 
 ```bash
 python -m scripts.run_eval \
   --eval-set trigger_eval.json \
   --skill-path skills/pdf-extractor \
-  --model claude-opus-4-7 \
+  --model claude-sonnet-4-6 \
   [--description "Override description to test"] \
   [--runs-per-query 3] \
   [--num-workers 8] \
@@ -507,20 +509,20 @@ python -m scripts.run_eval \
 | `--model` | no (run_eval) / yes (run_loop) | — | Use the model that powers the session |
 | `--description` | no | from `SKILL.md` | Override to test a candidate description |
 | `--runs-per-query` | no | 3 | Higher = more reliable trigger-rate estimate |
-| `--num-workers` | no | — | Parallelism for `claude -p` calls |
+| `--num-workers` | no | — | Parallelism for `kiro-cli -p` calls |
 | `--timeout` | no | — | Per-query timeout in seconds |
 | `--trigger-threshold` | no | — | Threshold above which a query counts as triggered |
 | `--verbose` | no | off | Stream progress to stderr |
 
 ### 5.4 `improve_description.py`
 
-Call Claude to propose a better description from a failing eval result.
+Call the model via kiro-cli to propose a better description from a failing eval result.
 
 ```bash
 python -m scripts.improve_description \
   --eval-results results.json \
   --skill-path skills/pdf-extractor \
-  --model claude-opus-4-7 \
+  --model claude-sonnet-4-6 \
   [--history history.json] \
   [--verbose]
 ```
@@ -541,7 +543,7 @@ The full description-optimization loop (run_eval + improve_description in a loop
 python -m scripts.run_loop \
   --eval-set trigger_eval.json \
   --skill-path skills/pdf-extractor \
-  --model claude-opus-4-7 \
+  --model claude-sonnet-4-6 \
   --max-iterations 5 \
   --holdout 0.4 \
   --runs-per-query 3 \
