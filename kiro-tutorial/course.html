@@ -1,0 +1,3218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Agentic Coding with kiro-cli — Internal Course</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base: #0a0a0c;
+    --bg-surface: #131316;
+    --bg-elevated: #1c1c20;
+    --bg-code: #08080a;
+    --border: #26262c;
+    --border-strong: #3a3a42;
+    --border-amber: rgba(245, 158, 11, 0.35);
+    --text-primary: #f0f0f2;
+    --text-secondary: #b0b0b8;
+    --text-muted: #6c6c75;
+    --text-faint: #4a4a52;
+    --accent: #f59e0b;
+    --accent-bright: #fbbf24;
+    --accent-dim: rgba(245, 158, 11, 0.12);
+    --accent-glow: rgba(245, 158, 11, 0.25);
+    --success: #84cc16;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-weight: 400;
+    line-height: 1.65;
+    font-size: 16px;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 80px 80px;
+    opacity: 0.15;
+    pointer-events: none;
+    z-index: 0;
+    mask-image: radial-gradient(ellipse at top, black 0%, transparent 70%);
+  }
+
+  .scroll-progress {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-bright));
+    z-index: 1000;
+    box-shadow: 0 0 8px var(--accent-glow);
+    transition: width 0.05s linear;
+  }
+
+  .topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 56px;
+    background: rgba(10, 10, 12, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    z-index: 100;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+  }
+  .topbar .brand { color: var(--accent); font-weight: 600; text-transform: uppercase; }
+  .topbar .brand::before { content: '> '; color: var(--text-muted); }
+  .topbar .sep { color: var(--text-faint); margin: 0 16px; }
+  .topbar .subtitle { color: var(--text-secondary); }
+  .topbar .menu-toggle {
+    display: none;
+    margin-left: auto;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 6px 12px;
+    cursor: pointer;
+    border-radius: 3px;
+  }
+  .topbar .menu-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    padding-top: 56px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .sidebar {
+    position: sticky;
+    top: 56px;
+    height: calc(100vh - 56px);
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+    background: rgba(19, 19, 22, 0.6);
+    padding: 32px 24px;
+  }
+  .sidebar::-webkit-scrollbar { width: 6px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+
+  .sidebar .part-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 24px 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sidebar .part-label:first-child { margin-top: 0; }
+  .sidebar .part-label .part-num { color: var(--accent); }
+
+  .sidebar .module-link {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 8px 10px;
+    margin: 2px 0;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 14px;
+    border-left: 2px solid transparent;
+    border-radius: 0 3px 3px 0;
+    transition: all 0.15s ease;
+    cursor: pointer;
+  }
+  .sidebar .module-link .num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+  .sidebar .module-link.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: var(--accent-dim);
+  }
+  .sidebar .module-link.active .num { color: var(--accent); }
+  .sidebar .module-link.locked { color: var(--text-faint); cursor: not-allowed; }
+  .sidebar .module-link.locked .num { color: var(--text-faint); }
+  .sidebar .module-link:not(.locked):not(.active):hover {
+    color: var(--text-primary);
+    background: var(--bg-elevated);
+    border-left-color: var(--border-strong);
+  }
+  .sidebar .module-link .lock-icon {
+    margin-left: auto;
+    font-size: 10px;
+    color: var(--text-faint);
+  }
+
+  .main { padding: 64px 64px 120px; max-width: 860px; }
+
+  .module-content { display: none; animation: fadeIn 0.35s ease; }
+  .module-content.active { display: block; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .module-meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .module-meta .dot { color: var(--text-faint); }
+  .module-meta .accent { color: var(--accent); }
+
+  .module-number {
+    font-family: var(--font-mono);
+    font-size: 96px;
+    line-height: 1;
+    font-weight: 700;
+    color: var(--bg-elevated);
+    -webkit-text-stroke: 1px var(--border-strong);
+    letter-spacing: -0.04em;
+    margin-bottom: -8px;
+  }
+
+  .module-title {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 40px;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin: 8px 0 24px;
+  }
+  .module-title .em { color: var(--accent); font-style: italic; font-weight: 500; }
+
+  .module-lede {
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    border-left: 2px solid var(--accent);
+    padding: 6px 0 6px 20px;
+    margin-bottom: 48px;
+    font-weight: 300;
+  }
+
+  h2.section {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 24px;
+    line-height: 1.3;
+    color: var(--text-primary);
+    margin: 56px 0 20px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+  h2.section .id {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+  }
+
+  .module-content p {
+    margin: 0 0 18px;
+    color: var(--text-secondary);
+    font-size: 16px;
+  }
+  .module-content p strong { color: var(--text-primary); font-weight: 600; }
+  .module-content p em { color: var(--text-primary); font-style: italic; }
+  .module-content p code, .module-content li code, .module-content td code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    color: var(--accent-bright);
+    background: var(--bg-code);
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+  }
+
+  .module-content ul, .module-content ol {
+    margin: 0 0 24px;
+    padding-left: 0;
+    list-style: none;
+  }
+  .module-content ul li, .module-content ol li {
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    padding-left: 28px;
+    position: relative;
+  }
+  .module-content ul li::before {
+    content: '—';
+    font-family: var(--font-mono);
+    color: var(--accent);
+    position: absolute;
+    left: 0;
+    font-weight: 500;
+  }
+  .module-content ol { counter-reset: list-counter; }
+  .module-content ol li { counter-increment: list-counter; }
+  .module-content ol li::before {
+    content: counter(list-counter, decimal-leading-zero);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent);
+    position: absolute;
+    left: 0;
+    top: 3px;
+    font-weight: 600;
+  }
+
+  pre.code-block {
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--accent);
+    padding: 18px 20px;
+    margin: 24px 0;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--text-primary);
+    border-radius: 3px;
+    white-space: pre;
+  }
+  pre.code-block::-webkit-scrollbar { height: 4px; }
+  pre.code-block::-webkit-scrollbar-thumb { background: var(--border-strong); }
+  pre.code-block .comment { color: var(--text-muted); font-style: italic; }
+  pre.code-block .keyword { color: var(--accent-bright); }
+  pre.code-block .string { color: var(--success); }
+  pre.code-block .symbol { color: var(--text-secondary); }
+  pre.code-block .arrow { color: var(--accent); font-weight: 600; }
+
+  .pullquote {
+    margin: 28px 0;
+    padding: 20px 24px;
+    background: var(--accent-dim);
+    border-left: 3px solid var(--accent);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 17px;
+    font-weight: 500;
+    line-height: 1.5;
+    border-radius: 0 3px 3px 0;
+  }
+  .pullquote::before {
+    content: 'KEY IDEA';
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--accent);
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .callout {
+    margin: 24px 0;
+    padding: 18px 22px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+  .callout .label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 14px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  thead { background: var(--bg-elevated); }
+  th {
+    text-align: left;
+    padding: 12px 16px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+  }
+  td {
+    padding: 12px 16px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--bg-elevated); }
+  td strong { color: var(--text-primary); }
+
+  .exercise {
+    margin: 36px 0;
+    padding: 24px 28px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    position: relative;
+  }
+  .exercise::before {
+    content: 'EXERCISE';
+    position: absolute;
+    top: -10px;
+    left: 20px;
+    background: var(--bg-base);
+    padding: 0 10px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .exercise h3 {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--text-primary);
+    margin: 4px 0 12px;
+  }
+
+  .reveal {
+    margin: 16px 0;
+    border: 1px dashed var(--border-strong);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .reveal-toggle {
+    width: 100%;
+    background: transparent;
+    border: none;
+    padding: 12px 16px;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: color 0.15s;
+  }
+  .reveal-toggle:hover { color: var(--accent); }
+  .reveal-toggle .chevron { transition: transform 0.2s ease; color: var(--accent); }
+  .reveal-toggle.open .chevron { transform: rotate(90deg); }
+  .reveal-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    padding: 0 16px;
+  }
+  .reveal-content.open { max-height: 800px; padding: 0 16px 16px; }
+  .reveal-content p { color: var(--text-primary); font-size: 14px; }
+
+  .module-nav {
+    margin-top: 80px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .module-nav a {
+    flex: 1;
+    padding: 20px 22px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    text-decoration: none;
+    color: var(--text-secondary);
+    transition: all 0.15s;
+    display: block;
+  }
+  .module-nav a:hover {
+    border-color: var(--accent);
+    color: var(--text-primary);
+    background: var(--bg-elevated);
+  }
+  .module-nav a.disabled { opacity: 0.3; pointer-events: none; }
+  .module-nav .nav-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .module-nav .nav-title {
+    font-family: var(--font-sans);
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 15px;
+  }
+  .module-nav .next { text-align: right; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar {
+      position: fixed;
+      top: 56px;
+      left: 0;
+      width: 300px;
+      max-width: 85vw;
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+      z-index: 90;
+      background: var(--bg-base);
+      border-right: 1px solid var(--border-strong);
+    }
+    .sidebar.open { transform: translateX(0); }
+    .topbar .menu-toggle { display: block; }
+    .main { padding: 40px 24px 80px; }
+    .module-number { font-size: 64px; }
+    .module-title { font-size: 30px; }
+    .module-lede { font-size: 16px; }
+    h2.section { font-size: 20px; }
+    .topbar .subtitle { display: none; }
+    pre.code-block { font-size: 12px; padding: 14px 16px; }
+    .module-nav { flex-direction: column; }
+    .module-nav .next { text-align: left; }
+  }
+
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 56px 0 0 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 80;
+  }
+  .sidebar-overlay.open { display: block; }
+</style>
+</head>
+<body>
+
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<div class="topbar">
+  <span class="brand">kiro-cli course</span>
+  <span class="sep">/</span>
+  <span class="subtitle">Agentic Coding for Senior Engineers</span>
+  <button class="menu-toggle" id="menuToggle">[ menu ]</button>
+</div>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<div class="layout">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="part-label"><span class="part-num">P1</span> Mental Models</div>
+    <a class="module-link" href="#module-1" data-module="1"><span class="num">01</span> What an LLM Actually Is</a>
+    <a class="module-link" href="#module-2" data-module="2"><span class="num">02</span> From Chat to Agent</a>
+    <a class="module-link" href="#module-3" data-module="3"><span class="num">03</span> MCP in Plain English</a>
+
+    <div class="part-label"><span class="part-num">P2</span> kiro-cli Primitives</div>
+    <a class="module-link" href="#module-4" data-module="4"><span class="num">04</span> Steering</a>
+    <a class="module-link" href="#module-5" data-module="5"><span class="num">05</span> Skills</a>
+    <a class="module-link" href="#module-6" data-module="6"><span class="num">06</span> Agents</a>
+    <a class="module-link" href="#module-7" data-module="7"><span class="num">07</span> Multi-agent &amp; Subagents</a>
+    <a class="module-link" href="#module-8" data-module="8"><span class="num">08</span> Hooks</a>
+    <a class="module-link" href="#module-9" data-module="9"><span class="num">09</span> Specs</a>
+
+    <div class="part-label"><span class="part-num">P3</span> Patterns &amp; Discipline</div>
+    <a class="module-link" href="#module-10" data-module="10"><span class="num">10</span> Context Management</a>
+    <a class="module-link" href="#module-11" data-module="11"><span class="num">11</span> Orchestration &amp; Planning</a>
+    <a class="module-link" href="#module-12" data-module="12"><span class="num">12</span> Operating Surface</a>
+    <a class="module-link" href="#module-13" data-module="13"><span class="num">13</span> Best Practices</a>
+    <a class="module-link" href="#module-14" data-module="14"><span class="num">14</span> Hands-on Labs</a>
+  </aside>
+
+  <main class="main">
+
+    <!-- ===================== MODULE 1 ===================== -->
+    <article class="module-content" id="module-1">
+      <div class="module-meta">
+        <span>Module 01</span>
+        <span class="dot">//</span>
+        <span class="accent">Part 1 — Mental Models</span>
+        <span class="dot">//</span>
+        <span>~15 min</span>
+      </div>
+      <div class="module-number">01</div>
+      <h1 class="module-title">What an LLM <span class="em">actually</span> is</h1>
+      <div class="module-lede">
+        Before we touch kiro-cli, we have to break a few assumptions. You've worked with stateful services, deterministic functions, and well-typed APIs for years. LLMs work very differently from what your intuition expects.
+      </div>
+
+      <h2 class="section"><span class="id">1.1</span> The mental model: next-token prediction</h2>
+      <p>An LLM is, at its core, a function:</p>
+<pre class="code-block"><span class="symbol">f(</span>text_in<span class="symbol">)</span> <span class="arrow">-&gt;</span> <span class="keyword">probability_distribution_over_next_token</span></pre>
+      <p>Given some input text, it outputs a probability for every possible next token. It samples one. Appends. Repeats. That's it.</p>
+      <p>It is <strong>not</strong> "reasoning" in the human sense. It is <strong>not</strong> consulting a database. It is <strong>not</strong> retrieving facts. It is pattern-matching token sequences based on its training data and what it has seen in the current input.</p>
+      <div class="callout">
+        <div class="label">Analogy You Already Know</div>
+        <p>Autocomplete on your phone, scaled massively. Your phone predicts the next word from 2–3 recent ones. An LLM predicts the next token from up to ~200,000 tokens of context.</p>
+      </div>
+      <div class="pullquote">
+        Every response from kiro-cli is the model generating tokens one at a time based on whatever you put in front of it. The discipline of agentic coding is <em>what you put in front of it.</em>
+      </div>
+
+      <h2 class="section"><span class="id">1.2</span> Stateless and single-turn</h2>
+      <p>LLMs have <strong>no memory between calls.</strong> None.</p>
+      <p>Closest analogy from your world: <strong>HTTP</strong>. Every request must carry everything the server needs to respond. The server has no idea you called it five minutes ago.</p>
+      <p>LLM calls work the same way:</p>
+<pre class="code-block"><span class="comment"># Call 1</span>
+user<span class="symbol">:</span> <span class="string">"What's the capital of France?"</span>
+       <span class="arrow">-&gt;</span> <span class="string">"Paris."</span>
+
+<span class="comment"># Call 2 (no history replayed)</span>
+user<span class="symbol">:</span> <span class="string">"What did I just ask?"</span>
+       <span class="arrow">-&gt;</span> <span class="comment">[model has no idea]</span></pre>
+      <p>For call 2 to work, the client must replay the history:</p>
+<pre class="code-block"><span class="comment"># Call 2 (with history replayed)</span>
+<span class="symbol">[</span>
+  user<span class="symbol">:</span>      <span class="string">"What's the capital of France?"</span>,
+  assistant<span class="symbol">:</span> <span class="string">"Paris."</span>,
+  user<span class="symbol">:</span>      <span class="string">"What did I just ask?"</span>
+<span class="symbol">]</span>
+       <span class="arrow">-&gt;</span> <span class="string">"You asked about the capital of France."</span></pre>
+      <p>The illusion of memory in a chat session is achieved by <strong>the client replaying all prior messages on every turn</strong>. This isn't a kiro-cli quirk — it is how every LLM-backed chat works.</p>
+      <div class="callout">
+        <div class="label">Engineering Implication</div>
+        <ul>
+          <li>The cost of your conversation grows linearly with history. By turn 50, you ship 50 turns of history per request.</li>
+          <li>"Forgetting" is the default. Persistence has to be engineered — steering files, indexed knowledge, MCP servers (Modules 3-5).</li>
+        </ul>
+      </div>
+
+      <h2 class="section"><span class="id">1.3</span> Non-determinism: the deal-breaker for engineers</h2>
+      <p>LLMs sample from a probability distribution. Given the same input, <strong>you may get different outputs.</strong> This is by design.</p>
+      <p>A few knobs control it:</p>
+      <table>
+        <thead><tr><th>Knob</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td><code>temperature</code></td><td>Higher = more randomness. <code>0</code> = greedy (always pick the most likely token). <code>1+</code> = exploratory.</td></tr>
+          <tr><td><code>top_p</code>, <code>top_k</code></td><td>Restrict the sampling pool to the most probable tokens.</td></tr>
+          <tr><td><code>seed</code></td><td>Some APIs accept it. Not all providers honour it strictly.</td></tr>
+        </tbody>
+      </table>
+      <p>Even at <code>temperature: 0</code> you are not guaranteed perfect determinism. Floating-point ordering, batching effects on inference servers, and provider-side caching all break it. <strong>Treat LLMs as non-deterministic by default.</strong></p>
+      <div class="pullquote">
+        If your workflow assumes "same input -&gt; same output", it will break.
+      </div>
+      <p>Three things this means in practice:</p>
+      <ol>
+        <li>Don't pin behavior with a single example prompt. Pin it with <strong>rules, schemas, and validations</strong> (steering, hooks, tests).</li>
+        <li>Treat agent output like <strong>untrusted user input</strong> — validate, lint, run tests, never auto-merge.</li>
+        <li>Reproducibility comes from <strong>constraining the input</strong> (system prompt, tools, schemas) and <strong>gating the output</strong> (tests, reviews, hooks). It does not come from the model itself.</li>
+      </ol>
+      <div class="callout">
+        <div class="label">Why This Matters For The Whole Course</div>
+        <p>This single property — non-determinism — is <strong>why every other primitive in kiro-cli exists</strong>. Steering, agents, skills, hooks, specs. They are all tools for constraining input and gating output to make a non-deterministic engine produce reliable results.</p>
+      </div>
+
+      <h2 class="section"><span class="id">1.4</span> Context window: the working set</h2>
+      <p>The context window is the maximum number of tokens the model can see in one call. Today's frontier models: up to 200K tokens, roughly 500 pages of code/text.</p>
+      <p>Rough conversions:</p>
+      <ul>
+        <li>1 token ≈ 0.75 English words, or 3–4 characters of code</li>
+        <li>A typical Python file: 500–2,000 tokens</li>
+        <li>A medium MR diff: 1,000–5,000 tokens</li>
+        <li>Your whole repo: 500K–5M+ tokens — <strong>will not fit</strong></li>
+      </ul>
+      <p>When you exceed the window, the request either fails or older content is silently truncated depending on the client. <strong>kiro-cli does not magically fit your whole repo into context.</strong> It chooses what to include — and your steering files, skills, and <code>@</code>-references in chat are how you guide those choices.</p>
+      <p>This is why <strong>context management is the single most important skill</strong> in agentic coding (Module 10).</p>
+
+      <h2 class="section"><span class="id">1.5</span> Knowledge cutoff and hallucination</h2>
+      <p>The model is trained on data up to a certain date (its <em>knowledge cutoff</em>). It does not know what happened after. Anything it "knows" is frozen at training time.</p>
+      <p>When asked about things it doesn't know, it sometimes generates plausible-sounding but <strong>fabricated</strong> content. This is <em>hallucination</em>. It is not a bug. It is a fundamental property of pattern-matching token predictors filling in gaps with the most probable continuation.</p>
+      <div class="callout">
+        <div class="label">Counter-Measures (Preview of Later Modules)</div>
+        <ul>
+          <li><strong>Grounding</strong> — give the model real data via tool calls: file reads, MCP servers, web fetches (Modules 2, 3).</li>
+          <li><strong>Forced verification</strong> — instruct the agent to check the actual file or source before answering (Module 4 — steering).</li>
+          <li><strong>Output constraints</strong> — schemas, code that must compile, tests that must pass. Fabrications fail loudly (Modules 8, 9 — hooks, specs).</li>
+        </ul>
+      </div>
+      <p><strong>Why MCP exists (preview):</strong> to give the model trustworthy, standardized ways to ground itself in real-world data instead of pattern-matching its way through hallucinations.</p>
+
+      <div class="exercise">
+        <h3>Run-the-same-prompt-three-times</h3>
+        <p>In kiro-cli, run this exact prompt three times in three <strong>fresh</strong> sessions:</p>
+<pre class="code-block"><span class="string">What are 5 unusual TypeScript features that surprise senior engineers?</span></pre>
+        <p>You will get three different lists. Some items will overlap. Some will not.</p>
+        <ol>
+          <li>Which items appear all three times? &nbsp;<strong>strong signal</strong>, likely real</li>
+          <li>Which appear once? &nbsp;<strong>weaker signal</strong>, possibly hallucinated</li>
+          <li>How would you verify the weaker ones?</li>
+        </ol>
+        <div class="reveal">
+          <button class="reveal-toggle" data-target="rev-m1-1"><span class="chevron">›</span> Reveal answer to (3)</button>
+          <div class="reveal-content" id="rev-m1-1">
+            <p>Tool calls into the TypeScript docs via MCP. We'll wire this up in Module 3. The takeaway: never trust a single LLM response on a factual claim. Reproduce, cross-check, or ground it.</p>
+          </div>
+        </div>
+        <p style="margin-top: 16px; color: var(--text-muted); font-size: 14px;">This drives home all five sections at once: stateless (fresh sessions), non-deterministic (different outputs), hallucination risk (the singletons), and the need for grounding (verification via real sources).</p>
+      </div>
+
+      <h2 class="section"><span class="id">▢</span> Check yourself</h2>
+      <p>Tap each claim to reveal the answer.</p>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m1-q1"><span class="chevron">›</span> 1. The LLM remembers your conversation between turns.</button>
+        <div class="reveal-content" id="rev-m1-q1">
+          <p><strong>False.</strong> The client replays history every turn. The model itself is stateless.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m1-q2"><span class="chevron">›</span> 2. <code>temperature: 0</code> guarantees identical output.</button>
+        <div class="reveal-content" id="rev-m1-q2">
+          <p><strong>False.</strong> Floating-point ordering and inference-side batching break exact determinism. Treat all output as non-deterministic.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m1-q3"><span class="chevron">›</span> 3. A bigger context window solves "the agent forgets my conventions."</button>
+        <div class="reveal-content" id="rev-m1-q3">
+          <p><strong>Partially.</strong> Capacity helps. Grounding and persistence still need engineering — that's what steering is for (Module 4).</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m1-q4"><span class="chevron">›</span> 4. Hallucination is a bug Anthropic will eventually fix.</button>
+        <div class="reveal-content" id="rev-m1-q4">
+          <p><strong>False.</strong> It is a fundamental property of next-token prediction. We engineer around it with grounding, verification, and output constraints.</p>
+        </div>
+      </div>
+
+      <nav class="module-nav">
+        <a class="disabled">
+          <div class="nav-label">— Previous</div>
+          <div class="nav-title">Start of course</div>
+        </a>
+        <a class="next" href="#module-2">
+          <div class="nav-label">Next module —</div>
+          <div class="nav-title">02 · From Chat to Agent</div>
+        </a>
+      </nav>
+    </article>
+
+    <!-- ===================== MODULE 2 ===================== -->
+    <article class="module-content" id="module-2">
+      <div class="module-meta">
+        <span>Module 02</span>
+        <span class="dot">//</span>
+        <span class="accent">Part 1 — Mental Models</span>
+        <span class="dot">//</span>
+        <span>~12 min</span>
+      </div>
+      <div class="module-number">02</div>
+      <h1 class="module-title">From chat <span class="em">to</span> agent</h1>
+      <div class="module-lede">
+        A chat answers. An agent acts. The difference is two things: tools and a loop. Once you grasp the loop, every kiro-cli feature stops feeling like magic and starts looking like deliberate engineering.
+      </div>
+
+      <h2 class="section"><span class="id">2.1</span> The leap: from text-out to action-out</h2>
+      <p>In Module 1 we saw the LLM is a function: text in, text out. By itself, it cannot:</p>
+      <ul>
+        <li>Read a file</li>
+        <li>Run a command</li>
+        <li>Query a database</li>
+        <li>Hit an API</li>
+        <li>Even know the current time</li>
+      </ul>
+      <p>Everything it "knows" is frozen at training time. Everything it can affect in the real world is <strong>nothing</strong>.</p>
+      <p>The leap to <em>agent</em> is allowing the LLM to emit structured intents — "I want to call this tool with these arguments" — that a surrounding runtime executes on its behalf. The result is fed back into the conversation as if it were a new user turn. The model continues.</p>
+      <div class="pullquote">
+        "Agentic" = LLM + tools + a loop that mediates them.
+      </div>
+
+      <h2 class="section"><span class="id">2.2</span> Tool calling: an RPC the model writes itself</h2>
+      <p>Modern LLMs are trained to recognize "I should use a tool" and emit a structured request:</p>
+<pre class="code-block"><span class="symbol">{</span>
+  <span class="string">"tool"</span><span class="symbol">:</span> <span class="string">"fs_read"</span>,
+  <span class="string">"input"</span><span class="symbol">:</span> <span class="symbol">{</span> <span class="string">"path"</span><span class="symbol">:</span> <span class="string">"src/auth.py"</span> <span class="symbol">}</span>
+<span class="symbol">}</span></pre>
+      <p>The agent harness — kiro-cli in our case — sees this, calls the actual <code>fs_read</code> function, and feeds the result back to the model on the next turn:</p>
+<pre class="code-block"><span class="symbol">{</span>
+  <span class="string">"tool_result"</span><span class="symbol">:</span> <span class="string">"def authenticate(token): ..."</span>,
+  <span class="string">"tool_call_id"</span><span class="symbol">:</span> <span class="string">"abc123"</span>
+<span class="symbol">}</span></pre>
+      <p>The model now sees the file contents and can reason about them.</p>
+      <div class="pullquote">
+        Tool calling is an RPC where the LLM is the client and writes the call site at runtime.
+      </div>
+      <p>You don't write <code>agent.fs_read("src/auth.py")</code> in your code. The LLM decides to. Your job is to (a) tell it which tools exist and (b) constrain when it should use them.</p>
+
+      <h2 class="section"><span class="id">2.3</span> The agent loop</h2>
+      <p>Here is the loop in pseudocode — essentially what kiro-cli runs:</p>
+<pre class="code-block"><span class="keyword">while</span> <span class="keyword">True</span><span class="symbol">:</span>
+    response = llm.complete<span class="symbol">(</span>messages, tools=available_tools<span class="symbol">)</span>
+
+    <span class="keyword">if</span> response.is_tool_call<span class="symbol">:</span>
+        result = execute_tool<span class="symbol">(</span>response.tool, response.input<span class="symbol">)</span>
+        messages.append<span class="symbol">(</span>response<span class="symbol">)</span>
+        messages.append<span class="symbol">(</span>result<span class="symbol">)</span>
+        <span class="keyword">continue</span>                     <span class="comment"># go around again</span>
+
+    <span class="keyword">else</span><span class="symbol">:</span>
+        <span class="keyword">return</span> response.text         <span class="comment"># final answer to user</span></pre>
+      <p>Four properties matter:</p>
+      <ol>
+        <li><strong>Multi-step by default.</strong> One user prompt can trigger many LLM turns, each with one or more tool calls, before a final answer.</li>
+        <li><strong>The model decides when to stop.</strong> It returns plain text when it judges the task done.</li>
+        <li><strong>The harness mediates everything.</strong> Tool whitelists, hooks, error handling, progress reporting.</li>
+        <li><strong>State lives in <code>messages</code>.</strong> The model is still stateless; the harness rebuilds the message list each turn.</li>
+      </ol>
+      <p>This loop is the unit of agentic work. Everything else — subagents, hooks, specs — is structure layered on top.</p>
+
+      <h2 class="section"><span class="id">2.4</span> Why one prompt isn't enough</h2>
+      <p>Real engineering work is multi-step. Example: <em>"Fix the failing test in <code>auth.py</code>."</em></p>
+      <table>
+        <thead><tr><th>Turn</th><th>Model action</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><code>fs_read("tests/test_auth.py")</code></td></tr>
+          <tr><td>2</td><td><code>fs_read("src/auth.py")</code></td></tr>
+          <tr><td>3</td><td><code>execute_bash("pytest tests/test_auth.py -v")</code> to see failure</td></tr>
+          <tr><td>4</td><td>Reason about the failure (no tool call)</td></tr>
+          <tr><td>5</td><td><code>fs_write("src/auth.py", &lt;fixed code&gt;)</code></td></tr>
+          <tr><td>6</td><td><code>execute_bash("pytest tests/test_auth.py")</code> to verify</td></tr>
+          <tr><td>7</td><td>Return: <em>"Fixed the bug — <code>verify_signature</code> was returning before checking expiry."</em></td></tr>
+        </tbody>
+      </table>
+      <p>Seven turns. One user prompt. <strong>This is what "agent" buys you.</strong> A chat model could only have answered turn 4. It couldn't have read the files, run the tests, or written the fix.</p>
+
+      <h2 class="section"><span class="id">2.5</span> The harness: kiro-cli's actual job</h2>
+      <p>The agent harness is the program around the LLM that makes the loop possible. <strong>kiro-cli is a harness.</strong> Its core jobs:</p>
+      <ul>
+        <li><strong>Tool registry</strong> — which tools are available, what their schemas look like</li>
+        <li><strong>Tool execution</strong> — actually running <code>fs_read</code>, <code>execute_bash</code>, MCP calls</li>
+        <li><strong>Safety layer</strong> — permission prompts, denied commands, allowedPaths, hooks</li>
+        <li><strong>Context management</strong> — what messages get sent on each turn (Module 10)</li>
+        <li><strong>Subagent orchestration</strong> — spawning child agents (Module 7)</li>
+        <li><strong>User interface</strong> — TUI, slash commands, headless mode (Module 12)</li>
+      </ul>
+      <p>Built-in tools in kiro-cli (preview):</p>
+      <table>
+        <thead><tr><th>Tool</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>fs_read</code></td><td>Read a file</td></tr>
+          <tr><td><code>fs_write</code></td><td>Write or edit a file</td></tr>
+          <tr><td><code>execute_bash</code></td><td>Run shell commands</td></tr>
+          <tr><td><code>web_search</code> / <code>web_fetch</code></td><td>Search and fetch URLs</td></tr>
+          <tr><td><code>subagent</code></td><td>Spawn a child agent (Module 7)</td></tr>
+          <tr><td><code>report_progress</code></td><td>Surface status to the user</td></tr>
+          <tr><td>MCP tools</td><td>Anything from connected MCP servers (Module 3)</td></tr>
+        </tbody>
+      </table>
+      <div class="pullquote">
+        The harness is the substrate. The LLM is the brain. Tools are the hands. Steering, agents, skills, hooks, and specs are the rules of engagement.
+      </div>
+
+      <h2 class="section"><span class="id">2.6</span> What stops an agent running forever?</h2>
+      <p>A reasonable thing to ask early. Three forces:</p>
+      <ol>
+        <li><strong>The model decides.</strong> When it judges the task complete, it returns plain text instead of another tool call. Primary mechanism.</li>
+        <li><strong>Safety limits in the harness.</strong> Max iterations, max tokens, manual <code>Ctrl+C</code>. kiro-cli has these.</li>
+        <li><strong>Hooks.</strong> You can write a <code>stop</code> hook that gates termination (Module 8).</li>
+      </ol>
+      <p>In practice, a well-prompted agent on a well-scoped task stops in 5-30 turns. A poorly-scoped agent on an open-ended task can loop until you stop it. <strong>Scoping work and giving clear stopping criteria is part of the skill.</strong></p>
+
+      <div class="exercise">
+        <h3>Watch the loop run</h3>
+        <p>Open kiro-cli in a real repo. Ask:</p>
+<pre class="code-block"><span class="string">What stack does this project use? Just read the relevant config files
+and give me a one-paragraph summary.</span></pre>
+        <p>Watch the tool calls. You should see something like:</p>
+        <ul>
+          <li><code>fs_read("package.json")</code> or <code>fs_read("pyproject.toml")</code> or <code>fs_read("requirements.txt")</code></li>
+          <li>Possibly <code>fs_read("README.md")</code></li>
+          <li>A final text response with no tool call</li>
+        </ul>
+        <p>Count the turns. Note: the model did not answer until it had grounded itself in real files. That grounding behavior comes from training plus kiro-cli's built-in steering (Module 4).</p>
+      </div>
+
+      <h2 class="section"><span class="id">▢</span> Check yourself</h2>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m2-q1"><span class="chevron">›</span> 1. An agent is just an LLM with better prompts.</button>
+        <div class="reveal-content" id="rev-m2-q1">
+          <p><strong>False.</strong> An agent is LLM + tools + harness loop. The loop is the defining feature.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m2-q2"><span class="chevron">›</span> 2. The LLM directly executes file reads and bash commands.</button>
+        <div class="reveal-content" id="rev-m2-q2">
+          <p><strong>False.</strong> The LLM emits a structured tool call; the harness executes it.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m2-q3"><span class="chevron">›</span> 3. One user prompt = one LLM call.</button>
+        <div class="reveal-content" id="rev-m2-q3">
+          <p><strong>False.</strong> One user prompt can trigger many LLM turns and many tool calls.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m2-q4"><span class="chevron">›</span> 4. kiro-cli's main job is being a UI for the LLM.</button>
+        <div class="reveal-content" id="rev-m2-q4">
+          <p><strong>False.</strong> The TUI is one piece. The harness's main job is the loop, tool execution, safety, and context management.</p>
+        </div>
+      </div>
+
+      <nav class="module-nav">
+        <a href="#module-1">
+          <div class="nav-label">— Previous</div>
+          <div class="nav-title">01 · What an LLM Actually Is</div>
+        </a>
+        <a class="next" href="#module-3">
+          <div class="nav-label">Next module —</div>
+          <div class="nav-title">03 · MCP in Plain English</div>
+        </a>
+      </nav>
+    </article>
+
+    <!-- ===================== MODULE 3 ===================== -->
+    <article class="module-content" id="module-3">
+      <div class="module-meta">
+        <span>Module 03</span>
+        <span class="dot">//</span>
+        <span class="accent">Part 1 — Mental Models</span>
+        <span class="dot">//</span>
+        <span>~12 min</span>
+      </div>
+      <div class="module-number">03</div>
+      <h1 class="module-title">MCP <span class="em">in plain</span> English</h1>
+      <div class="module-lede">
+        If the harness is the agent's body and tools are its hands, MCP is the standard plug it uses to connect new hands. Without MCP, every tool integration is bespoke. With MCP, your team writes one server and every MCP-aware agent can use it.
+      </div>
+
+      <h2 class="section"><span class="id">3.1</span> The problem MCP solves</h2>
+      <p>Before MCP, every agent ↔ tool integration was custom:</p>
+      <ul>
+        <li>Agent A talks to GitHub via Python SDK with one auth pattern</li>
+        <li>Agent B talks to GitHub via REST with a different auth pattern</li>
+        <li>Agent C uses a third-party wrapper</li>
+        <li>None of them share code</li>
+      </ul>
+      <p>Every new integration meant re-implementing auth, error handling, schema definitions, rate-limit handling. <strong>It didn't scale, and it locked you into one agent vendor's tool ecosystem.</strong></p>
+
+      <h2 class="section"><span class="id">3.2</span> What MCP is</h2>
+      <p><strong>Model Context Protocol</strong> is an open spec — a client/server protocol that standardizes three primitives:</p>
+      <table>
+        <thead><tr><th>Primitive</th><th>What it is</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Tools</strong></td><td>Actions the agent can invoke</td><td><code>create_issue</code>, <code>query_database</code>, <code>deploy_lambda</code></td></tr>
+          <tr><td><strong>Resources</strong></td><td>Data the agent can read</td><td>A file, a record, a doc URL</td></tr>
+          <tr><td><strong>Prompts</strong></td><td>Pre-built templates the user/agent can invoke</td><td>"Summarize PR &lt;id&gt;" with bound args</td></tr>
+        </tbody>
+      </table>
+      <p>An <strong>MCP server</strong> exposes some combination of these. An <strong>MCP client</strong> (the agent harness — kiro-cli) connects to servers and makes their tools/resources/prompts available to the LLM.</p>
+      <div class="pullquote">
+        HTTP standardized how clients talk to servers on the web. Any browser works with any compliant web server. MCP does the same for agent ↔ tool: write one MCP server, and any MCP-aware agent (kiro-cli, Claude Code, custom agents) can use it.
+      </div>
+
+      <h2 class="section"><span class="id">3.3</span> The architecture</h2>
+<pre class="code-block">+---------------+      stdio / HTTP       +-----------------+
+|   kiro-cli    |  &lt;-------------------   |   MCP server    |
+|  (MCP client) |     JSON-RPC msgs       | (GitHub, DB,    |
+|               |                         |  AWS, custom)   |
++---------------+                         +-----------------+
+       |                                         |
+       v                                         v
+   LLM sees tools                          Executes tools
+   from this server                        against the
+   in its tool list                        real system</pre>
+      <p>Two transports:</p>
+      <ul>
+        <li><strong>stdio</strong> — the server runs as a local subprocess; messages over stdin/stdout. Best for local dev tools.</li>
+        <li><strong>SSE / HTTP</strong> — the server runs as a remote service. Best for shared team servers.</li>
+      </ul>
+      <p>The wire protocol is <strong>JSON-RPC</strong>. You almost never write it by hand — SDKs exist for Python, TypeScript, Go.</p>
+
+      <h2 class="section"><span class="id">3.4</span> How kiro-cli consumes MCP</h2>
+      <p>kiro-cli reads MCP server configs from JSON files. Two scopes:</p>
+      <table>
+        <thead><tr><th>Scope</th><th>Path</th><th>When to use</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Global</strong></td><td><code>~/.aws/kiro-cli/mcp.json</code></td><td>Personal servers across all projects</td></tr>
+          <tr><td><strong>Workspace</strong></td><td><code>.kiro/settings/mcp.json</code></td><td>Project-shared, committed to the repo</td></tr>
+        </tbody>
+      </table>
+      <p>Example workspace config:</p>
+<pre class="code-block"><span class="symbol">{</span>
+  <span class="string">"mcpServers"</span><span class="symbol">:</span> <span class="symbol">{</span>
+    <span class="string">"github"</span><span class="symbol">:</span> <span class="symbol">{</span>
+      <span class="string">"command"</span><span class="symbol">:</span> <span class="string">"npx"</span>,
+      <span class="string">"args"</span><span class="symbol">:</span> <span class="symbol">[</span><span class="string">"-y"</span>, <span class="string">"@modelcontextprotocol/server-github"</span><span class="symbol">]</span>,
+      <span class="string">"env"</span><span class="symbol">:</span> <span class="symbol">{</span> <span class="string">"GITHUB_TOKEN"</span><span class="symbol">:</span> <span class="string">"${GITHUB_TOKEN}"</span> <span class="symbol">}</span>
+    <span class="symbol">}</span>,
+    <span class="string">"postgres-local"</span><span class="symbol">:</span> <span class="symbol">{</span>
+      <span class="string">"command"</span><span class="symbol">:</span> <span class="string">"uvx"</span>,
+      <span class="string">"args"</span><span class="symbol">:</span> <span class="symbol">[</span><span class="string">"mcp-server-postgres"</span>, <span class="string">"postgresql://localhost/myapp"</span><span class="symbol">]</span>
+    <span class="symbol">}</span>
+  <span class="symbol">}</span>
+<span class="symbol">}</span></pre>
+      <p>When kiro-cli starts, it launches each configured server as a subprocess (stdio) or connects over HTTP. The server reports its tools. kiro-cli adds them to the LLM's tool list with a namespace prefix like <code>github___create_issue</code>.</p>
+      <p>Per-agent scoping (preview — Module 6):</p>
+<pre class="code-block"><span class="symbol">{</span>
+  <span class="string">"name"</span><span class="symbol">:</span> <span class="string">"db-investigator"</span>,
+  <span class="string">"mcpServers"</span><span class="symbol">:</span> <span class="symbol">[</span><span class="string">"postgres-local"</span><span class="symbol">]</span>,
+  <span class="string">"tools"</span><span class="symbol">:</span> <span class="symbol">[</span><span class="string">"fs_read"</span><span class="symbol">]</span>
+<span class="symbol">}</span></pre>
+      <p>This agent has access to <em>only</em> the Postgres MCP server's tools plus <code>fs_read</code>. Principle of least privilege.</p>
+
+      <h2 class="section"><span class="id">3.5</span> What MCP isn't</h2>
+      <p>Three misconceptions to clear up for your team:</p>
+      <ul>
+        <li><strong>MCP is not a model.</strong> It's a protocol. Models are still Claude, GPT, etc.</li>
+        <li><strong>MCP is not an agent framework.</strong> It doesn't define how agents think or loop. That's the harness's job.</li>
+        <li><strong>MCP is not magic.</strong> Each MCP server is code someone wrote — auth, error handling, and bugs included. Vet servers like any other dependency.</li>
+      </ul>
+      <div class="pullquote">
+        MCP is plumbing. It standardizes the socket, not what's on the other end.
+      </div>
+
+      <h2 class="section"><span class="id">3.6</span> When to use MCP vs built-in tools</h2>
+      <p>kiro-cli already has <code>fs_read</code>, <code>fs_write</code>, <code>execute_bash</code>, <code>web_search</code> as built-ins. Why not put everything in MCP?</p>
+      <table>
+        <thead><tr><th>Use built-in</th><th>Use MCP</th></tr></thead>
+        <tbody>
+          <tr><td>Filesystem, shell, web fetch — universal needs</td><td>Anything domain-specific (GitHub, AWS, your DB)</td></tr>
+          <tr><td>Performance-critical paths</td><td>Anything needing auth flows or credentials</td></tr>
+          <tr><td>Things the harness needs for safety (allowedPaths)</td><td>Anything you want hot-swappable across agents</td></tr>
+        </tbody>
+      </table>
+      <p>Rule of thumb: <strong>if multiple agents (or projects) would benefit from the same integration, write it as an MCP server.</strong> If it's a one-off, a direct tool or <code>execute_bash</code> call is fine.</p>
+
+      <h2 class="section"><span class="id">3.7</span> Servers worth knowing</h2>
+      <p>A rough survey (verify currency before adopting — the ecosystem moves fast):</p>
+      <ul>
+        <li><strong>Official</strong> — filesystem, git, github, gitlab, postgres, slack, brave-search, fetch (<code>@modelcontextprotocol/server-*</code> packages)</li>
+        <li><strong>AWS / cloud</strong> — community servers for S3, Lambda, RDS, etc.</li>
+        <li><strong>Internal</strong> — write your own for company-specific systems (deploy pipelines, internal APIs, runbooks)</li>
+      </ul>
+      <p>Writing your own is straightforward — TypeScript or Python SDK, define tool schemas, implement handlers. A useful first one for your team: an MCP server that wraps your internal docs/wiki search.</p>
+
+      <div class="exercise">
+        <h3>Wire up an MCP server</h3>
+        <p>Add the official filesystem MCP server to kiro-cli scoped to a sandbox directory.</p>
+        <p>Add to <code>~/.aws/kiro-cli/mcp.json</code>:</p>
+<pre class="code-block"><span class="symbol">{</span>
+  <span class="string">"mcpServers"</span><span class="symbol">:</span> <span class="symbol">{</span>
+    <span class="string">"fs-sandbox"</span><span class="symbol">:</span> <span class="symbol">{</span>
+      <span class="string">"command"</span><span class="symbol">:</span> <span class="string">"npx"</span>,
+      <span class="string">"args"</span><span class="symbol">:</span> <span class="symbol">[</span><span class="string">"-y"</span>, <span class="string">"@modelcontextprotocol/server-filesystem"</span>, <span class="string">"/tmp/kiro-sandbox"</span><span class="symbol">]</span>
+    <span class="symbol">}</span>
+  <span class="symbol">}</span>
+<span class="symbol">}</span></pre>
+        <p>Then in kiro-cli, ask:</p>
+<pre class="code-block"><span class="string">Use the fs-sandbox MCP server to list files in the sandbox and create
+a hello.txt with the current timestamp.</span></pre>
+        <p>Inspect the tool calls. You should see <code>fs_sandbox___list_directory</code> and <code>fs_sandbox___write_file</code> (or similar). Notice the namespace prefix — that is how kiro-cli disambiguates MCP tools from built-ins.</p>
+        <p>Also try <code>/mcp</code> in interactive mode to see connected servers and their tools.</p>
+      </div>
+
+      <h2 class="section"><span class="id">▢</span> Check yourself</h2>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m3-q1"><span class="chevron">›</span> 1. MCP is a replacement for the LLM.</button>
+        <div class="reveal-content" id="rev-m3-q1">
+          <p><strong>False.</strong> MCP is a protocol for tools. The LLM is unchanged.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m3-q2"><span class="chevron">›</span> 2. MCP servers run inside the agent process.</button>
+        <div class="reveal-content" id="rev-m3-q2">
+          <p><strong>False.</strong> They run as separate processes (stdio) or remote services (HTTP).</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m3-q3"><span class="chevron">›</span> 3. I have to write MCP servers in a specific language.</button>
+        <div class="reveal-content" id="rev-m3-q3">
+          <p><strong>False.</strong> SDKs exist for TS, Python, Go, Rust. The wire protocol is language-agnostic.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m3-q4"><span class="chevron">›</span> 4. Once I add an MCP server globally, every agent automatically uses it.</button>
+        <div class="reveal-content" id="rev-m3-q4">
+          <p><strong>Partially.</strong> Globally configured servers are visible to all agents <em>unless</em> an agent's config scopes <code>mcpServers</code> to a subset (Module 6). Per-agent scoping is the right default.</p>
+        </div>
+      </div>
+
+      <div class="callout" style="margin-top: 48px; border-color: var(--border-amber);">
+        <div class="label">End of Part 1</div>
+        <p>You now have the mental model:</p>
+        <ul>
+          <li>LLMs are <strong>stateless, non-deterministic next-token predictors</strong> with a fixed-size context window and no real-world senses.</li>
+          <li>Agents are <strong>LLMs + tools + a harness loop</strong> that lets them act, not just answer.</li>
+          <li>MCP is the <strong>standard plug for tools</strong> — so integrations are reusable and agent-agnostic.</li>
+        </ul>
+        <p>Everything in Part 2 is about kiro-cli's primitives for shaping this stack to your team's conventions.</p>
+      </div>
+
+      <nav class="module-nav">
+        <a href="#module-2">
+          <div class="nav-label">— Previous</div>
+          <div class="nav-title">02 · From Chat to Agent</div>
+        </a>
+        <a class="next" href="#module-4">
+          <div class="nav-label">Next module —</div>
+          <div class="nav-title">04 · Steering</div>
+        </a>
+      </nav>
+    </article>
+
+    <!-- ===================== MODULE 4 ===================== -->
+    <article class="module-content" id="module-4">
+      <div class="module-meta">
+        <span>Module 04</span>
+        <span class="dot">//</span>
+        <span class="accent">Part 2 — kiro-cli Primitives</span>
+        <span class="dot">//</span>
+        <span>~13 min</span>
+      </div>
+      <div class="module-number">04</div>
+      <h1 class="module-title"><span class="em">Steering</span> the agent</h1>
+      <div class="module-lede">
+        Steering is the first kiro-cli primitive. It is the answer to "how do I stop telling the agent my conventions on every turn?" — and it is the foundation for every other primitive in Part 2.
+      </div>
+
+      <h2 class="section"><span class="id">4.1</span> The problem steering solves</h2>
+      <p>In Part 1 we saw the LLM is stateless. Every turn starts blank. If you want it to:</p>
+      <ul>
+        <li>Use your team's commit message format</li>
+        <li>Prefer Terraform over CDK</li>
+        <li>Never edit files under <code>infra/prod/</code></li>
+        <li>Always run pytest after Python edits</li>
+        <li>Follow your CSS naming convention</li>
+      </ul>
+      <p>...you'd have to write that into every prompt. That doesn't scale and it leaks across team members.</p>
+      <p><strong>Steering files solve this.</strong> They are markdown files in your repo that kiro-cli automatically includes in the model's context based on rules you define.</p>
+      <div class="pullquote">
+        Steering is durable system-prompt content, version-controlled with your repo, scoped by file glob.
+      </div>
+      <div class="callout">
+        <div class="label">Mental Model</div>
+        <p>Middleware that runs before every model call, injecting the relevant rules so the model doesn't start blank.</p>
+      </div>
+
+      <h2 class="section"><span class="id">4.2</span> Where steering files live</h2>
+<pre class="code-block">your-repo/
+├── AGENTS.md              <span class="comment"># Always-loaded project context (top-level)</span>
+├── .kiro/
+│   └── steering/
+│       ├── conventions.md       <span class="comment"># Inclusion mode set per file</span>
+│       ├── aws-patterns.md
+│       └── security-rules.md
+└── src/</pre>
+      <p>Two kinds:</p>
+      <p><strong>AGENTS.md</strong> (top-level) — Always loaded for every kiro-cli session in this workspace. Your "the agent must always know this" file. Keep it short — every token here costs context budget on every turn.</p>
+      <p><strong><code>.kiro/steering/*.md</code></strong> — Granular steering files with three possible inclusion modes, declared per file:</p>
+      <table>
+        <thead><tr><th>Mode</th><th>When it loads</th><th>Use case</th></tr></thead>
+        <tbody>
+          <tr><td><code>always</code></td><td>Every turn (like <code>AGENTS.md</code> but separable)</td><td>Core team rules, always relevant</td></tr>
+          <tr><td><code>fileMatch</code></td><td>When files matching a glob enter context</td><td>Tech-specific rules: "when editing <code>*.tf</code>, prefer modules"</td></tr>
+          <tr><td><code>manual</code></td><td>Only when <code>@</code>-referenced in chat</td><td>Niche playbooks, deep-dive guides</td></tr>
+        </tbody>
+      </table>
+      <p>The mode is set in YAML front-matter at the top of each file.</p>
+
+      <h2 class="section"><span class="id">4.3</span> Anatomy of a steering file</h2>
+<pre class="code-block"><span class="symbol">---</span>
+<span class="keyword">inclusion</span>: <span class="string">fileMatch</span>
+<span class="keyword">fileMatchPattern</span>: <span class="string">"**/*.tf"</span>
+<span class="symbol">---</span>
+
+<span class="comment"># Terraform conventions for this repo</span>
+
+- Use modules from `modules/` — don't inline resources except for one-offs
+- Stack naming: `&lt;env&gt;-&lt;service&gt;-&lt;resource&gt;` (e.g., `prod-api-rds`)
+- Every resource gets a `Project` and `Owner` tag
+- State backend is S3 in `terraform-state-&lt;account-id&gt;`
+- Never use the `local-exec` provisioner. Use a `null_resource` with a
+  signed payload if absolutely necessary.
+
+<span class="comment">## When asked to add a new resource</span>
+
+1. Check if a module already exists in `modules/`
+2. If not, propose creating one with reusability in mind
+3. Default to least-privilege IAM</pre>
+      <p>Front-matter is YAML. Everything below is markdown the model reads as additional system instructions on the turns where this file is loaded.</p>
+
+      <h2 class="section"><span class="id">4.4</span> Inclusion modes in detail</h2>
+      <p><strong><code>always</code></strong> — loaded every turn, regardless of context.</p>
+      <ul>
+        <li>Best for: team identity, hard "never do this" rules, critical security boundaries</li>
+        <li>Cost: every always-loaded file consumes tokens on every turn. Keep these lean.</li>
+      </ul>
+      <p><strong><code>fileMatch</code></strong> — loaded when a file matching the glob appears in the active context (you mention it, the agent reads it).</p>
+      <ul>
+        <li>Best for: language conventions (<code>**/*.py</code>), infra rules (<code>infra/**/*.tf</code>), stack-specific patterns</li>
+        <li>Cheap — only consumes tokens when relevant</li>
+      </ul>
+      <p><strong><code>manual</code></strong> — loaded only when the user explicitly <code>@</code>-references it in chat:</p>
+<pre class="code-block"><span class="string">Continue with the deployment runbook. @runbook</span></pre>
+      <ul>
+        <li>Best for: playbooks too long to always include, role-specific workflows, onboarding content</li>
+      </ul>
+
+      <h2 class="section"><span class="id">4.5</span> What goes in steering vs everywhere else</h2>
+      <p>Common mistake: put everything in steering. It bloats context, slows responses, and turns <code>AGENTS.md</code> into a CV.</p>
+      <table>
+        <thead><tr><th>Goes in steering</th><th>Goes elsewhere</th></tr></thead>
+        <tbody>
+          <tr><td>Conventions, style, "always do X" rules</td><td>One-off task instructions → just put them in the prompt</td></tr>
+          <tr><td>Project-wide architectural decisions</td><td>Detailed runbooks for specific tasks → <code>manual</code> steering or skills (Module 5)</td></tr>
+          <tr><td>Security boundaries</td><td>Mechanically-enforceable rules → hooks (Module 8)</td></tr>
+          <tr><td>Tech-stack patterns</td><td>Code that should be reusable → just write the code</td></tr>
+        </tbody>
+      </table>
+      <div class="pullquote">
+        If a rule must hold across every interaction in this repo, it goes in always-loaded steering. Everything else has a better home.
+      </div>
+
+      <h2 class="section"><span class="id">4.6</span> A real-shape AGENTS.md</h2>
+<pre class="code-block"><span class="comment"># Platform team agent context</span>
+
+<span class="comment">## Stack</span>
+- Python 3.12, FastAPI, Pydantic v2
+- Infra: Terraform on AWS (eu-west-1 primary)
+- CI: GitLab CI
+- Tests: pytest, no other framework
+- Lint: ruff (line length 100), mypy strict
+
+<span class="comment">## Repo layout</span>
+- `src/` — application code
+- `infra/` — Terraform modules and environments
+- `tests/` — pytest tests, mirrors `src/` layout
+- `.gitlab/` — CI pipelines
+
+<span class="comment">## Behavior rules</span>
+- After editing any file under `src/`, run `make test`
+- Never write to `infra/prod/` without an explicit
+  "I want to touch prod" from the user
+- Use the existing logger config, do not introduce new logging libs
+- All public functions need typed signatures and a one-line docstring
+
+<span class="comment">## When unsure</span>
+- Ask before introducing a new dependency
+- Read the relevant `.kiro/steering/*.md` before writing infra code</pre>
+      <p>Short, scannable, no fluff. Every line earns its tokens. <strong>This file is loaded on every turn — treat it like an SLO, not a wiki.</strong></p>
+
+      <h2 class="section"><span class="id">4.7</span> Common failure modes</h2>
+      <table>
+        <thead><tr><th>Failure</th><th>Cause</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>Agent ignores your rules</td><td>Steering not loaded (wrong mode or glob doesn't match)</td><td>Run <code>/context</code> to see what's actually loaded</td></tr>
+          <tr><td>Context window blows up</td><td>Too many <code>always</code>-mode files</td><td>Move bulk content to <code>fileMatch</code> or <code>manual</code></td></tr>
+          <tr><td>Rules conflict</td><td>Multiple steering files contradict each other</td><td>One source of truth per concern; cross-reference instead of duplicating</td></tr>
+          <tr><td>Steering rot</td><td>Files drift from codebase</td><td>Treat steering as code: review in MRs, lint for staleness</td></tr>
+        </tbody>
+      </table>
+
+      <div class="exercise">
+        <h3>Create your first fileMatch steering</h3>
+        <p>In a real repo, create <code>.kiro/steering/python-style.md</code>:</p>
+<pre class="code-block"><span class="symbol">---</span>
+<span class="keyword">inclusion</span>: <span class="string">fileMatch</span>
+<span class="keyword">fileMatchPattern</span>: <span class="string">"**/*.py"</span>
+<span class="symbol">---</span>
+
+<span class="comment"># Python style for this repo</span>
+
+- Line length 100, ruff-formatted
+- Prefer Pydantic models over dicts for structured data
+- All functions get type hints, including return type
+- Tests live in `tests/` and mirror `src/` layout</pre>
+        <p>Then in kiro-cli, ask: <em>"Refactor <code>src/handler.py</code> to use Pydantic for the input."</em></p>
+        <p>Use <code>/context</code> to verify your steering file got loaded. Check the output respects your line-length and type-hint rules. Then ask a Terraform question and confirm the Python steering does <strong>not</strong> get loaded — that's the <code>fileMatch</code> glob working.</p>
+      </div>
+
+      <h2 class="section"><span class="id">▢</span> Check yourself</h2>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m4-q1"><span class="chevron">›</span> 1. <code>AGENTS.md</code> is loaded only when <code>@</code>-referenced.</button>
+        <div class="reveal-content" id="rev-m4-q1">
+          <p><strong>False.</strong> <code>AGENTS.md</code> is always loaded for every session in the workspace.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m4-q2"><span class="chevron">›</span> 2. The more steering files I add, the smarter the agent becomes.</button>
+        <div class="reveal-content" id="rev-m4-q2">
+          <p><strong>False.</strong> Each <code>always</code>-loaded file costs tokens every turn. Steering is a budget, not free metadata.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m4-q3"><span class="chevron">›</span> 3. Steering replaces the need for code review.</button>
+        <div class="reveal-content" id="rev-m4-q3">
+          <p><strong>False.</strong> Steering shapes the agent's defaults. Review catches what steering and hooks miss.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m4-q4"><span class="chevron">›</span> 4. I can mechanically enforce a rule through steering alone.</button>
+        <div class="reveal-content" id="rev-m4-q4">
+          <p><strong>False.</strong> Steering is <em>advisory</em> to the LLM. For hard enforcement (block a bad action), use hooks (Module 8).</p>
+        </div>
+      </div>
+
+      <nav class="module-nav">
+        <a href="#module-3">
+          <div class="nav-label">— Previous</div>
+          <div class="nav-title">03 · MCP in Plain English</div>
+        </a>
+        <a class="next" href="#module-5">
+          <div class="nav-label">Next module —</div>
+          <div class="nav-title">05 · Skills</div>
+        </a>
+      </nav>
+    </article>
+
+    <!-- ===================== MODULE 5 ===================== -->
+    <article class="module-content" id="module-5">
+      <div class="module-meta">
+        <span>Module 05</span>
+        <span class="dot">//</span>
+        <span class="accent">Part 2 — kiro-cli Primitives</span>
+        <span class="dot">//</span>
+        <span>~14 min</span>
+      </div>
+      <div class="module-number">05</div>
+      <h1 class="module-title">Skills: <span class="em">invokable</span> workflows</h1>
+      <div class="module-lede">
+        Steering tells the agent the rules. Skills give it the playbooks. A skill is a named, reusable workflow registered as a slash command — version-controlled, scoped to your repo, and shareable across the team.
+      </div>
+
+      <h2 class="section"><span class="id">5.1</span> What a kiro-cli skill is</h2>
+      <p>A skill is a directory containing a <code>SKILL.md</code> (plus any companion files) that bundles instructions, references, and templates into one named workflow. On kiro-cli startup, each skill auto-registers as a slash command in the TUI.</p>
+<pre class="code-block">.kiro/skills/
+└── security-review/
+    ├── SKILL.md
+    ├── checklist.md
+    └── examples/
+        └── good-iam.tf</pre>
+      <p>The user types <code>/security-review</code>. The agent loads <code>SKILL.md</code>, follows its instructions, and produces the expected output.</p>
+      <div class="pullquote">
+        A skill is a runbook the agent can read and act on, exposed as a slash command.
+      </div>
+
+      <h2 class="section"><span class="id">5.2</span> Anatomy</h2>
+      <p><code>SKILL.md</code>:</p>
+<pre class="code-block"><span class="symbol">---</span>
+<span class="keyword">name</span>: <span class="string">security-review</span>
+<span class="keyword">description</span>: <span class="string">Audit a Terraform change for IAM least-privilege, public
+  exposure, and secret handling. Use before any apply to non-dev environments.</span>
+<span class="symbol">---</span>
+
+<span class="comment"># Security review</span>
+
+You are running a security review on a Terraform change.
+
+<span class="comment">## Inputs needed</span>
+- The path to the Terraform module or changed files
+- The target environment (dev / staging / prod)
+
+<span class="comment">## Steps</span>
+1. Read the changed `.tf` files.
+2. For each `aws_iam_*` resource: flag wildcards in actions/resources.
+3. For each public resource (`aws_lb`, `aws_s3_bucket`, ...): confirm an
+   explicit access rule; flag unintentional `0.0.0.0/0` ingress.
+4. Grep for hardcoded secrets in `.tf` files.
+5. Produce a markdown report with one section per finding (severity,
+   file, line, suggested fix).
+
+<span class="comment">## Output format</span>
+Markdown with `## Finding N` headers. Do not modify files — review only.</pre>
+      <p>Two things matter:</p>
+      <ul>
+        <li><strong><code>name</code></strong> is the slash command. Keep it short.</li>
+        <li><strong><code>description</code></strong> is the elevator pitch. The agent uses it to decide relevance when the user doesn't invoke explicitly.</li>
+      </ul>
+
+      <h2 class="section"><span class="id">5.3</span> Skills vs steering</h2>
+      <table>
+        <thead><tr><th>Steering</th><th>Skills</th></tr></thead>
+        <tbody>
+          <tr><td>Always or auto-loaded by glob</td><td>Loaded on slash command (mostly)</td></tr>
+          <tr><td>"Rules I must follow"</td><td>"Workflows I can run"</td></tr>
+          <tr><td>Conventions, style, constraints</td><td>Procedures, checklists, recipes</td></tr>
+          <tr><td>Must stay lean (token cost every turn)</td><td>Can be long (only loads when invoked)</td></tr>
+        </tbody>
+      </table>
+      <p>Rule of thumb:</p>
+      <ul>
+        <li>Convention or constraint → steering</li>
+        <li>Procedure or named workflow → skill</li>
+      </ul>
+
+      <h2 class="section"><span class="id">5.4</span> kiro-cli skills vs Claude Code skills</h2>
+      <p>Both products use "skills" but the activation model differs in ways that matter. Be explicit with your team so people don't copy-paste assumptions:</p>
+      <table>
+        <thead><tr><th>Aspect</th><th>kiro-cli skill</th><th>Claude Code skill</th></tr></thead>
+        <tbody>
+          <tr><td>Location</td><td><code>.kiro/skills/&lt;name&gt;/SKILL.md</code></td><td><code>~/.claude/skills/&lt;name&gt;/SKILL.md</code> or project <code>.claude/skills/</code></td></tr>
+          <tr><td>Invocation</td><td>Slash command (<code>/&lt;name&gt;</code>); user-initiated</td><td>Auto-discovery; agent reads <code>description</code> and decides when to load</td></tr>
+          <tr><td>Visibility</td><td>Visible in TUI as a slash command</td><td>Invisible to the user as a command; agent decides quietly</td></tr>
+          <tr><td>Disclosure</td><td>Eager — body loads when invoked</td><td>Progressive — only description is in context by default; body loads when relevant</td></tr>
+          <tr><td>Best for</td><td>User-facing playbooks they want to trigger</td><td>Agent-facing know-how the agent should silently know exists</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Porting implications:</strong></p>
+      <ul>
+        <li>A Claude Code skill body doesn't drop into kiro-cli unchanged. Activation is different.</li>
+        <li>In Claude Code the <code>description</code> is critical (it drives auto-selection). In kiro-cli the description is <em>helpful</em> but the primary trigger is the user typing the slash command.</li>
+        <li>In kiro-cli, add usage hints to the body since users will see it after invoking explicitly.</li>
+      </ul>
+      <div class="pullquote">
+        Same word, different design. kiro-cli skills are commands; Claude Code skills are quietly-consulted knowledge.
+      </div>
+
+      <h2 class="section"><span class="id">5.5</span> Writing a good skill</h2>
+      <p>Three things matter:</p>
+      <ol>
+        <li><strong>The name is the slash command.</strong> Short and memorable. <code>/sec-review</code> beats <code>/security-review-checklist-v2</code>.</li>
+        <li><strong>The description helps the agent recognise relevance.</strong> Even with explicit invocation, the agent may propose a skill when context matches. Description = elevator pitch.</li>
+        <li><strong>The body should be runnable.</strong> Step-by-step, with checks and decision points. Not philosophy — instructions the agent will follow line by line.</li>
+      </ol>
+
+      <h2 class="section"><span class="id">5.6</span> A second example: a deploy-preflight skill</h2>
+<pre class="code-block"><span class="symbol">---</span>
+<span class="keyword">name</span>: <span class="string">deploy-preflight</span>
+<span class="keyword">description</span>: <span class="string">Run pre-deploy checks for an AWS Lambda service before
+  GitLab CI deploys it. Validates tests, infra plan, secrets, and tags.</span>
+<span class="symbol">---</span>
+
+<span class="comment"># Deploy preflight</span>
+
+<span class="comment">## Steps</span>
+1. Run `make test`. Fail the preflight if any test fails.
+2. Run `terraform plan` for the target env. Surface:
+   - Any deletions
+   - Any IAM changes
+   - Any RDS changes
+3. List required secrets and confirm each exists in SSM Parameter Store
+   under `/services/&lt;service&gt;/&lt;env&gt;/`.
+4. Confirm every new resource has `Project` and `Owner` tags.
+5. Output a checklist: each item either OK or BLOCKED with reason.
+
+<span class="comment">## Stop conditions</span>
+- Any test failure
+- An IAM change to a production role without explicit user confirmation
+- A missing required secret</pre>
+      <p>User invokes <code>/deploy-preflight</code>. Output is predictable, reusable, version-controlled. The team builds shared discipline by editing the skill — not by retraining each engineer.</p>
+
+      <h2 class="section"><span class="id">5.7</span> When to use skills vs other primitives</h2>
+      <table>
+        <thead><tr><th>You want…</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td>The agent to always follow rule X</td><td>Steering (Module 4)</td></tr>
+          <tr><td>A named, repeatable procedure the team runs often</td><td>Skill</td></tr>
+          <tr><td>A constrained "agent persona" with locked-down tools/MCP</td><td>Agent config (Module 6)</td></tr>
+          <tr><td>To mechanically block a bad action</td><td>Hook (Module 8)</td></tr>
+          <tr><td>A multi-document, gated build (requirements → design → tasks)</td><td>Spec (Module 9)</td></tr>
+        </tbody>
+      </table>
+      <p>Mistake to avoid: cramming a multi-stage build into a skill. If your workflow needs gated approvals, separate documents, or human-in-the-loop decision points, you want a spec, not a skill.</p>
+
+      <h2 class="section"><span class="id">5.8</span> Common failure modes</h2>
+      <table>
+        <thead><tr><th>Failure</th><th>Cause</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>Skill never gets used</td><td>Description too vague; no one remembers the slash command</td><td>Description that says "use when X"; document the command in <code>AGENTS.md</code></td></tr>
+          <tr><td>Skill drifts</td><td>Body hard-codes file paths, tool versions that move</td><td>Reference patterns and conventions; don't pin to mutable specifics</td></tr>
+          <tr><td>Skill conflicts with steering</td><td>Both say different things about the same concern</td><td>One source of truth — link, don't duplicate</td></tr>
+          <tr><td>Too many skills clutter slash menu</td><td>One skill per micro-task</td><td>Group related steps into broader workflows</td></tr>
+        </tbody>
+      </table>
+
+      <div class="exercise">
+        <h3>Build and invoke a skill</h3>
+        <p>Create <code>.kiro/skills/repo-audit/SKILL.md</code>:</p>
+<pre class="code-block"><span class="symbol">---</span>
+<span class="keyword">name</span>: <span class="string">repo-audit</span>
+<span class="keyword">description</span>: <span class="string">Quick audit of repo health — README freshness, CI status,
+  dependency vulnerabilities, and missing tests.</span>
+<span class="symbol">---</span>
+
+<span class="comment"># Repo audit</span>
+
+<span class="comment">## Steps</span>
+1. Read `README.md` — note if it references commands or stack details
+   that no longer match the current code.
+2. Check `.gitlab-ci.yml` — confirm pipelines defined for build + test.
+3. Run `pip-audit` or `npm audit` (whichever applies).
+4. List source files under `src/` without corresponding test files
+   under `tests/`.
+5. Output: one markdown section per check, with status and findings.</pre>
+        <p>Restart kiro-cli. Type <code>/repo-audit</code>. Read the report. Then edit the skill to add a sixth check (your call — maybe "look for <code>TODO</code> comments older than 30 days") and confirm the slash command picks it up after a restart.</p>
+      </div>
+
+      <h2 class="section"><span class="id">▢</span> Check yourself</h2>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m5-q1"><span class="chevron">›</span> 1. A kiro-cli skill is the same as a Claude Code skill, just in a different directory.</button>
+        <div class="reveal-content" id="rev-m5-q1">
+          <p><strong>False.</strong> The invocation model differs: kiro-cli registers as slash commands; Claude Code uses auto-discovery via description.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m5-q2"><span class="chevron">›</span> 2. Skills replace steering.</button>
+        <div class="reveal-content" id="rev-m5-q2">
+          <p><strong>False.</strong> Different purposes — steering = rules always present; skills = workflows to invoke.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m5-q3"><span class="chevron">›</span> 3. The user must explicitly invoke a kiro-cli skill.</button>
+        <div class="reveal-content" id="rev-m5-q3">
+          <p><strong>Mostly.</strong> The slash command is the primary path. The agent can also propose a skill when the description matches the task, but explicit invocation is the default.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m5-q4"><span class="chevron">›</span> 4. A skill must be a single <code>SKILL.md</code> file.</button>
+        <div class="reveal-content" id="rev-m5-q4">
+          <p><strong>False.</strong> It's a directory — <code>SKILL.md</code> plus any supporting files (templates, scripts, examples) the workflow needs.</p>
+        </div>
+      </div>
+
+      <nav class="module-nav">
+        <a href="#module-4">
+          <div class="nav-label">— Previous</div>
+          <div class="nav-title">04 · Steering</div>
+        </a>
+        <a class="next" href="#module-6">
+          <div class="nav-label">Next module —</div>
+          <div class="nav-title">06 · Agents</div>
+        </a>
+      </nav>
+    </article>
+
+    <!-- ===================== MODULE 6 ===================== -->
+    <article class="module-content" id="module-6">
+      <div class="module-meta">
+        <span>Module 06</span>
+        <span class="dot">//</span>
+        <span class="accent">Part 2 — kiro-cli Primitives</span>
+        <span class="dot">//</span>
+        <span>~14 min</span>
+      </div>
+      <div class="module-number">06</div>
+      <h1 class="module-title">Agents: <span class="em">scoped</span> runtimes</h1>
+      <div class="module-lede">
+        Steering says what the agent should know. Skills say what the agent should do. An <em>agent config</em> says what the agent is allowed to do — model, tools, MCP servers, file boundaries, persona — wrapped in a JSON file. This is where least-privilege starts to bite.
+      </div>
+
+      <h2 class="section"><span class="id">6.1</span> Why custom agents</h2>
+      <p>The default agent (<code>kiro_default</code>) has access to everything: all built-in tools, all your MCP servers, no path restrictions. Great for exploration. Dangerous for repeatable workflows.</p>
+      <p>Custom agents are how you build constrained, special-purpose assistants on top of the same harness. Examples:</p>
+      <ul>
+        <li>A code reviewer that can read but not write</li>
+        <li>A DB investigator with only the read-only Postgres MCP and nothing else</li>
+        <li>A doc updater that can only touch <code>.md</code> files</li>
+        <li>A production-deploy assistant scoped to <code>infra/prod/</code> and gated by hooks</li>
+      </ul>
+      <div class="pullquote">
+        An agent is a constrained version of kiro-cli, persisted as a config file, named, and switchable.
+      </div>
+
+      <h2 class="section"><span class="id">6.2</span> Anatomy of an agent config</h2>
+      <p>File location:</p>
+      <ul>
+        <li><strong>Workspace</strong> — <code>.kiro/agents/&lt;name&gt;.json</code> (committed to the repo)</li>
+        <li><strong>Global</strong> — <code>~/.aws/kiro-cli/agents/&lt;name&gt;.json</code> (personal)</li>
+      </ul>
+      <p>A representative shape (exact field names may evolve — check the version you have installed):</p>
+<pre class="code-block"><span class="symbol">{</span>
+  <span class="string">"name"</span><span class="symbol">:</span> <span class="string">"code-reviewer"</span>,
+  <span class="string">"description"</span><span class="symbol">:</span> <span class="string">"Read-only code review against repo conventions"</span>,
+  <span class="string">"model"</span><span class="symbol">:</span> <span class="string">"claude-sonnet-4"</span>,
+  <span class="string">"prompt"</span><span class="symbol">:</span> <span class="string">"You are a senior code reviewer. Read changed files,
+            run linters, produce a markdown review. Never modify files."</span>,
+  <span class="string">"tools"</span><span class="symbol">:</span> <span class="symbol">[</span><span class="string">"fs_read"</span>, <span class="string">"execute_bash"</span><span class="symbol">]</span>,
+  <span class="string">"allowedTools"</span><span class="symbol">:</span> <span class="symbol">{</span>
+    <span class="string">"execute_bash"</span><span class="symbol">:</span> <span class="symbol">[</span><span class="string">"pytest *"</span>, <span class="string">"ruff check *"</span>, <span class="string">"mypy *"</span><span class="symbol">]</span>
+  <span class="symbol">}</span>,
+  <span class="string">"resources"</span><span class="symbol">:</span> <span class="symbol">[</span>
+    <span class="string">"file://./AGENTS.md"</span>,
+    <span class="string">"file://./.kiro/steering/*.md"</span>
+  <span class="symbol">]</span>,
+  <span class="string">"mcpServers"</span><span class="symbol">:</span> <span class="symbol">[]</span>
+<span class="symbol">}</span></pre>
+
+      <h2 class="section"><span class="id">6.3</span> Key fields</h2>
+      <table>
+        <thead><tr><th>Field</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><code>name</code></td><td>Identifier; used in <code>/agent &lt;name&gt;</code> to switch</td></tr>
+          <tr><td><code>description</code></td><td>What this agent does; helps with <code>/agent</code> listing</td></tr>
+          <tr><td><code>model</code></td><td>Which LLM to use (<code>claude-sonnet-4</code>, <code>claude-opus-4</code>, <code>claude-haiku-4-5</code> for cheap/fast)</td></tr>
+          <tr><td><code>prompt</code></td><td>Agent-specific system prompt (persona + role)</td></tr>
+          <tr><td><code>tools</code></td><td>Whitelist of built-in tools available</td></tr>
+          <tr><td><code>allowedTools</code></td><td>Fine-grained command/path restrictions per tool</td></tr>
+          <tr><td><code>resources</code></td><td>Files/URIs preloaded into context every turn</td></tr>
+          <tr><td><code>mcpServers</code></td><td>Which MCP servers this agent can use (subset of those configured)</td></tr>
+          <tr><td><code>allowedPaths</code> / <code>denyPatterns</code></td><td>Filesystem access boundaries</td></tr>
+        </tbody>
+      </table>
+      <div class="pullquote">
+        Everything not whitelisted is denied. This is the opposite of how default kiro-cli behaves.
+      </div>
+
+      <h2 class="section"><span class="id">6.4</span> Switching agents</h2>
+      <p>In the TUI:</p>
+<pre class="code-block">/agent              <span class="comment"># list available agents</span>
+/agent code-reviewer</pre>
+      <p>Headless mode:</p>
+<pre class="code-block">kiro-cli --agent code-reviewer --no-interactive <span class="string">"Review the diff in MR !1234"</span></pre>
+      <p>The agent is fixed for the duration of a session. You don't hot-swap mid-conversation; you start a new session with a different agent.</p>
+
+      <h2 class="section"><span class="id">6.5</span> Least privilege: a real example</h2>
+      <p><strong>The bad way</strong> — using the default agent for sensitive work:</p>
+<pre class="code-block">kiro-cli <span class="string">"Investigate why the Postgres connection pool is exhausted in prod"</span></pre>
+      <p>Default agent has <code>fs_write</code>, unrestricted <code>execute_bash</code>, every MCP server. The agent might decide to "fix" something by editing prod config. Not great.</p>
+      <p><strong>The better way</strong> — a <code>db-investigator</code> agent:</p>
+<pre class="code-block"><span class="symbol">{</span>
+  <span class="string">"name"</span><span class="symbol">:</span> <span class="string">"db-investigator"</span>,
+  <span class="string">"description"</span><span class="symbol">:</span> <span class="string">"Read-only Postgres investigation; reports findings, never modifies"</span>,
+  <span class="string">"model"</span><span class="symbol">:</span> <span class="string">"claude-sonnet-4"</span>,
+  <span class="string">"prompt"</span><span class="symbol">:</span> <span class="string">"You investigate database issues by querying Postgres (read-only)
+            and reading code. You never write to the database or modify
+            files. End with a findings report."</span>,
+  <span class="string">"tools"</span><span class="symbol">:</span> <span class="symbol">[</span><span class="string">"fs_read"</span>, <span class="string">"execute_bash"</span><span class="symbol">]</span>,
+  <span class="string">"allowedTools"</span><span class="symbol">:</span> <span class="symbol">{</span>
+    <span class="string">"execute_bash"</span><span class="symbol">:</span> <span class="symbol">[</span><span class="string">"grep *"</span>, <span class="string">"ls *"</span>, <span class="string">"cat *"</span><span class="symbol">]</span>
+  <span class="symbol">}</span>,
+  <span class="string">"mcpServers"</span><span class="symbol">:</span> <span class="symbol">[</span><span class="string">"postgres-prod-readonly"</span><span class="symbol">]</span>,
+  <span class="string">"resources"</span><span class="symbol">:</span> <span class="symbol">[</span>
+    <span class="string">"file://./AGENTS.md"</span>,
+    <span class="string">"file://./docs/db-runbooks/*.md"</span>
+  <span class="symbol">]</span>
+<span class="symbol">}</span></pre>
+      <p>Run:</p>
+<pre class="code-block">kiro-cli --agent db-investigator <span class="string">"Why is the connection pool exhausted?"</span></pre>
+      <p>The agent can read code, query the read-only DB MCP, run safe bash. It cannot write files, run arbitrary commands, or touch any other MCP. <strong>The blast radius is bounded by the config, not by trust in the model.</strong></p>
+
+      <h2 class="section"><span class="id">6.6</span> Steering, skills, agents — the triangulation</h2>
+      <table>
+        <thead><tr><th>Concern</th><th>Primitive</th></tr></thead>
+        <tbody>
+          <tr><td>What the agent should <strong>know</strong></td><td>Steering</td></tr>
+          <tr><td>What the agent should <strong>do</strong> (named workflows)</td><td>Skills</td></tr>
+          <tr><td>What the agent <strong>can</strong> do (boundaries)</td><td>Agent config</td></tr>
+        </tbody>
+      </table>
+      <p>Three primitives, three jobs. They compose: a custom agent loads its own resources/steering, can invoke skills as slash commands, and is bounded by its tools/paths config. <strong>Describe with steering, restrict with agents, encode know-how in skills.</strong></p>
+
+      <h2 class="section"><span class="id">6.7</span> Patterns for agent design</h2>
+      <ol>
+        <li><strong>Read-only investigator</strong> — security audits, perf debugging, root-cause work. Tools: <code>fs_read</code>, <code>execute_bash</code> (safe-only), read-only MCPs. No <code>fs_write</code>.</li>
+        <li><strong>Scoped writer</strong> — doc updaters, test generators. <code>fs_write</code> is allowed but <code>allowedPaths</code> restricts the blast radius.</li>
+        <li><strong>Single-purpose builder</strong> — for one task ("generate Pydantic models from OpenAPI", "convert REST to GraphQL"). Locked tools, prompt-as-spec.</li>
+        <li><strong>Coordinator</strong> — high-level prompt + the <code>subagent</code> tool to delegate to child agents (preview of Module 7).</li>
+      </ol>
+
+      <h2 class="section"><span class="id">6.8</span> Common failure modes</h2>
+      <table>
+        <thead><tr><th>Failure</th><th>Cause</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>Agent can't do its job</td><td>Over-restricted tools list</td><td>Add tools incrementally; find the minimum that works</td></tr>
+          <tr><td>Agent does things you didn't expect</td><td>Used default agent for a production workflow</td><td>Build a constrained agent and switch via <code>/agent</code></td></tr>
+          <tr><td>MCP tools not available</td><td>Forgot to include in agent's <code>mcpServers</code></td><td>Add to <code>mcpServers</code> array (must exist in <code>mcp.json</code> first)</td></tr>
+          <tr><td>Prompt is bloated</td><td>Encoding rules in prompt instead of steering</td><td>Move durable rules to steering; keep prompt for persona</td></tr>
+          <tr><td>Agent config drifts</td><td>Schema changed between kiro-cli versions</td><td>Pin a version; validate configs in CI</td></tr>
+        </tbody>
+      </table>
+
+      <div class="exercise">
+        <h3>Build a scoped doc-updater agent</h3>
+        <p>Create <code>.kiro/agents/doc-updater.json</code>:</p>
+<pre class="code-block"><span class="symbol">{</span>
+  <span class="string">"name"</span><span class="symbol">:</span> <span class="string">"doc-updater"</span>,
+  <span class="string">"description"</span><span class="symbol">:</span> <span class="string">"Edit documentation files only"</span>,
+  <span class="string">"model"</span><span class="symbol">:</span> <span class="string">"claude-haiku-4-5"</span>,
+  <span class="string">"prompt"</span><span class="symbol">:</span> <span class="string">"You update documentation. Edit .md files only. Never touch
+            source code or infrastructure files. Preserve existing
+            formatting and tone."</span>,
+  <span class="string">"tools"</span><span class="symbol">:</span> <span class="symbol">[</span><span class="string">"fs_read"</span>, <span class="string">"fs_write"</span><span class="symbol">]</span>,
+  <span class="string">"allowedPaths"</span><span class="symbol">:</span> <span class="symbol">[</span><span class="string">"docs/**"</span>, <span class="string">"README.md"</span>, <span class="string">"**/*.md"</span><span class="symbol">]</span>,
+  <span class="string">"resources"</span><span class="symbol">:</span> <span class="symbol">[</span><span class="string">"file://./AGENTS.md"</span><span class="symbol">]</span>
+<span class="symbol">}</span></pre>
+        <p>Then:</p>
+<pre class="code-block">kiro-cli --agent doc-updater
+&gt; <span class="string">Update README.md to mention the new /repo-audit skill</span></pre>
+        <p>Verify it works. Then ask the same agent to edit <code>src/handler.py</code> — it should refuse or hit a tool/path denial. That's the boundary doing its job.</p>
+      </div>
+
+      <h2 class="section"><span class="id">▢</span> Check yourself</h2>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m6-q1"><span class="chevron">›</span> 1. The default agent and a custom agent are functionally the same.</button>
+        <div class="reveal-content" id="rev-m6-q1">
+          <p><strong>False.</strong> Default is permissive; custom agents constrain tools, MCP, file access, and prompt.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m6-q2"><span class="chevron">›</span> 2. I can change the agent config mid-session.</button>
+        <div class="reveal-content" id="rev-m6-q2">
+          <p><strong>False.</strong> Config is fixed at session start; switch sessions to switch agents.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m6-q3"><span class="chevron">›</span> 3. An agent needs at least <code>fs_write</code> to be useful.</button>
+        <div class="reveal-content" id="rev-m6-q3">
+          <p><strong>False.</strong> Read-only agents (investigators, reviewers) are common and very useful.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m6-q4"><span class="chevron">›</span> 4. The system prompt and <code>AGENTS.md</code> should contain the same content.</button>
+        <div class="reveal-content" id="rev-m6-q4">
+          <p><strong>False.</strong> <code>AGENTS.md</code> = durable repo rules (steering). Prompt = agent persona/role. Separate concerns; cross-reference instead of duplicating.</p>
+        </div>
+      </div>
+
+      <nav class="module-nav">
+        <a href="#module-5">
+          <div class="nav-label">— Previous</div>
+          <div class="nav-title">05 · Skills</div>
+        </a>
+        <a class="next" href="#module-7">
+          <div class="nav-label">Next module —</div>
+          <div class="nav-title">07 · Multi-agent &amp; Subagents</div>
+        </a>
+      </nav>
+    </article>
+
+    <!-- ===================== MODULE 7 ===================== -->
+    <article class="module-content" id="module-7">
+      <div class="module-meta">
+        <span>Module 07</span>
+        <span class="dot">//</span>
+        <span class="accent">Part 2 — kiro-cli Primitives</span>
+        <span class="dot">//</span>
+        <span>~15 min</span>
+      </div>
+      <div class="module-number">07</div>
+      <h1 class="module-title">Multi-agent &amp; <span class="em">subagents</span></h1>
+      <div class="module-lede">
+        One agent can do a lot. But when a task fans out — parallel investigations, isolated dangerous operations, multi-perspective reviews — you want more than one. kiro-cli's <code>subagent</code> tool lets a parent spawn child agents with their own configs, each fully scoped. <strong>There is no <code>/spawn</code> command.</strong> This happens inside the loop.
+      </div>
+
+      <h2 class="section"><span class="id">7.1</span> The <code>subagent</code> tool</h2>
+      <p>Clear this up first: <strong>there is no <code>/spawn</code> slash command in kiro-cli.</strong> Subagent spawning is a tool call the LLM makes, just like <code>fs_read</code> or <code>execute_bash</code>. From the LLM's perspective:</p>
+<pre class="code-block"><span class="symbol">{</span>
+  <span class="string">"tool"</span><span class="symbol">:</span> <span class="string">"subagent"</span>,
+  <span class="string">"input"</span><span class="symbol">:</span> <span class="symbol">{</span>
+    <span class="string">"agent"</span><span class="symbol">:</span> <span class="string">"code-reviewer"</span>,
+    <span class="string">"prompt"</span><span class="symbol">:</span> <span class="string">"Review the changes in src/auth/"</span>
+  <span class="symbol">}</span>
+<span class="symbol">}</span></pre>
+      <p>The harness sees this, spins up a new kiro-cli runtime configured as <code>code-reviewer</code>, runs it with the given prompt, captures its final response, and returns that to the parent as the tool result. The parent continues with that result in context.</p>
+      <div class="pullquote">
+        A subagent is a recursive kiro-cli session, scoped to a child agent config, with the result piped back to the parent.
+      </div>
+
+      <h2 class="section"><span class="id">7.2</span> Anatomy of an orchestrator</h2>
+      <p>The parent (orchestrator) is a regular agent with the <code>subagent</code> tool enabled and an <code>availableAgents</code> whitelist:</p>
+<pre class="code-block"><span class="symbol">{</span>
+  <span class="string">"name"</span><span class="symbol">:</span> <span class="string">"review-orchestrator"</span>,
+  <span class="string">"description"</span><span class="symbol">:</span> <span class="string">"Coordinate a multi-perspective review"</span>,
+  <span class="string">"model"</span><span class="symbol">:</span> <span class="string">"claude-sonnet-4"</span>,
+  <span class="string">"prompt"</span><span class="symbol">:</span> <span class="string">"You coordinate reviews. For a given MR, spawn a code-reviewer
+            subagent for code quality, a security-reviewer for security,
+            and a doc-reviewer for docs. Combine findings into one report.
+            You don't read files directly — delegate."</span>,
+  <span class="string">"tools"</span><span class="symbol">:</span> <span class="symbol">[</span><span class="string">"subagent"</span><span class="symbol">]</span>,
+  <span class="string">"availableAgents"</span><span class="symbol">:</span> <span class="symbol">[</span><span class="string">"code-reviewer"</span>, <span class="string">"security-reviewer"</span>, <span class="string">"doc-reviewer"</span><span class="symbol">]</span>,
+  <span class="string">"trustedAgents"</span><span class="symbol">:</span> <span class="symbol">[</span><span class="string">"doc-reviewer"</span><span class="symbol">]</span>
+<span class="symbol">}</span></pre>
+      <p>Three new fields:</p>
+      <ul>
+        <li><code>tools: ["subagent"]</code> — the parent has only this tool. It can delegate but not act directly. (Add <code>fs_read</code> if it should read for context.)</li>
+        <li><code>availableAgents</code> — whitelist of child agents this parent may spawn</li>
+        <li><code>trustedAgents</code> — subset that skip the permission prompt when spawned</li>
+      </ul>
+
+      <h2 class="section"><span class="id">7.3</span> The orchestrator pattern</h2>
+      <p>The pattern that's most useful in practice:</p>
+      <ul>
+        <li><strong>Parent: read-only or no-fs.</strong> It plans, delegates, summarises. Cheap model (Haiku) often suffices.</li>
+        <li><strong>Children: scoped writers or investigators.</strong> Each has its own allowed tools, MCP servers, and file boundaries.</li>
+      </ul>
+      <p>What you gain:</p>
+      <ul>
+        <li><strong>Bounded blast radius</strong> — only children can write, each in its own scope</li>
+        <li><strong>Parallelism</strong> — parent can spawn independent children concurrently</li>
+        <li><strong>Token efficiency</strong> — children's full reasoning doesn't pollute parent context; only their final output returns</li>
+      </ul>
+
+      <h2 class="section"><span class="id">7.4</span> DAG planning</h2>
+<pre class="code-block">            review-orchestrator
+                    |
+        +-----------+-----------+
+        |           |           |
+   code-rev     sec-rev     doc-rev
+                    |
+                synthesise</pre>
+      <p>The parent decides which children are independent (parallel) and which have dependencies (sequential). It composes the result at the end. <strong>Fork/join applied to LLM workflows.</strong> The parent is the join point.</p>
+
+      <h2 class="section"><span class="id">7.5</span> What subagents CAN'T do</h2>
+      <p>Constraints to internalise before you architect around subagents:</p>
+      <table>
+        <thead><tr><th>Constraint</th><th>Implication</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Hooks don't fire on subagents</strong></td><td>A <code>preToolUse</code> hook only runs on the main agent. Subagent writes are <strong>not</strong> gated by hooks. Lock down at the agent config instead.</td></tr>
+          <tr><td><strong>Typically no MCP / web tools in subagents</strong></td><td>Many MCP servers can't be safely shared. Verify per-server before assuming.</td></tr>
+          <tr><td><strong>No nested orchestration by default</strong></td><td>A subagent typically cannot spawn its own subagents (or only one level, depending on config).</td></tr>
+          <tr><td><strong>Their context is fresh</strong></td><td>A subagent does <strong>not</strong> see the parent's conversation. You must pass everything in the prompt.</td></tr>
+          <tr><td><strong>You only get the final response</strong></td><td>The parent doesn't see the subagent's tool calls, intermediate reasoning, or files read. Just the final text.</td></tr>
+        </tbody>
+      </table>
+      <p>The last two combined matter most: <strong>the prompt to a subagent is a complete brief, not a conversation.</strong></p>
+
+      <h2 class="section"><span class="id">7.6</span> Inspecting subagents at runtime</h2>
+      <p>In the TUI, press <strong><code>Ctrl+G</code></strong> to open the subagent monitor — see spawned children, their status, their progress reports. Useful when an orchestration is opaque from outside.</p>
+
+      <h2 class="section"><span class="id">7.7</span> When NOT to use subagents</h2>
+      <table>
+        <thead><tr><th>Situation</th><th>Better alternative</th></tr></thead>
+        <tbody>
+          <tr><td>Single linear task</td><td>One agent</td></tr>
+          <tr><td>Task needs fine-grained hook enforcement</td><td>Main agent (hooks don't fire on subs)</td></tr>
+          <tr><td>You want to see every step turn-by-turn</td><td>Main agent (subagents are opaque between start/finish)</td></tr>
+          <tr><td>All operations share the same trust level</td><td>One scoped agent</td></tr>
+        </tbody>
+      </table>
+      <p>Subagents shine when you have <strong>parallelism + scope isolation</strong> as joint requirements. With only one of those, simpler structures work.</p>
+
+      <h2 class="section"><span class="id">7.8</span> A concrete fan-out</h2>
+      <p>User runs:</p>
+<pre class="code-block">kiro-cli --agent review-orchestrator <span class="string">"Review MR !1234"</span></pre>
+      <p>Inside the loop:</p>
+      <ol>
+        <li>Parent calls <code>subagent(code-reviewer, "Review src/ changes in branch X")</code> → waits</li>
+        <li>Parent calls <code>subagent(security-reviewer, "Audit IAM changes in branch X")</code> → waits</li>
+        <li>Parent calls <code>subagent(doc-reviewer, "Check docs match changes in branch X")</code> → waits</li>
+        <li>Parent receives three markdown reports</li>
+        <li>Parent synthesises into one final report</li>
+      </ol>
+      <p>If the parent is smart and the harness supports it, calls 1-3 can run in parallel. The whole orchestration completes in roughly <code>max(child durations)</code> instead of <code>sum</code>.</p>
+
+      <div class="exercise">
+        <h3>Build a parallel lint + test orchestrator</h3>
+        <p>Write an orchestrator with two child agents:</p>
+        <ul>
+          <li><code>lint-checker</code> — only <code>execute_bash</code> with <code>ruff *</code> and <code>mypy *</code></li>
+          <li><code>test-runner</code> — only <code>execute_bash</code> with <code>pytest *</code></li>
+        </ul>
+        <p>Orchestrator prompt:</p>
+<pre class="code-block"><span class="string">Run linting and tests in parallel. Combine results.
+If either failed, report which checks failed and the first 3 errors from each.</span></pre>
+        <p>Run on your repo. Confirm via <code>/agent</code> and <code>/tools</code> that the orchestrator can only use <code>subagent</code>, and that the children have only their scoped tools.</p>
+      </div>
+
+      <h2 class="section"><span class="id">▢</span> Check yourself</h2>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m7-q1"><span class="chevron">›</span> 1. I spawn a subagent by typing <code>/spawn</code> in the TUI.</button>
+        <div class="reveal-content" id="rev-m7-q1">
+          <p><strong>False.</strong> There is no <code>/spawn</code> command. Subagent is a tool the LLM calls inside the loop.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m7-q2"><span class="chevron">›</span> 2. A <code>preToolUse</code> hook on the parent blocks subagent file writes.</button>
+        <div class="reveal-content" id="rev-m7-q2">
+          <p><strong>False.</strong> Hooks don't fire for subagents. Use the subagent's own config to restrict.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m7-q3"><span class="chevron">›</span> 3. A subagent inherits the parent's conversation history.</button>
+        <div class="reveal-content" id="rev-m7-q3">
+          <p><strong>False.</strong> Subagents start with a fresh context; the parent's prompt must contain everything they need.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m7-q4"><span class="chevron">›</span> 4. The parent sees every tool call the subagent makes.</button>
+        <div class="reveal-content" id="rev-m7-q4">
+          <p><strong>False.</strong> The parent receives only the subagent's final response. Use <code>Ctrl+G</code> to inspect during execution.</p>
+        </div>
+      </div>
+
+      <nav class="module-nav">
+        <a href="#module-6">
+          <div class="nav-label">— Previous</div>
+          <div class="nav-title">06 · Agents</div>
+        </a>
+        <a class="next" href="#module-8">
+          <div class="nav-label">Next module —</div>
+          <div class="nav-title">08 · Hooks</div>
+        </a>
+      </nav>
+    </article>
+
+    <!-- ===================== MODULE 8 ===================== -->
+    <article class="module-content" id="module-8">
+      <div class="module-meta">
+        <span>Module 08</span>
+        <span class="dot">//</span>
+        <span class="accent">Part 2 — kiro-cli Primitives</span>
+        <span class="dot">//</span>
+        <span>~11 min</span>
+      </div>
+      <div class="module-number">08</div>
+      <h1 class="module-title">Hooks: <span class="em">mechanical</span> enforcement</h1>
+      <div class="module-lede">
+        Steering is advisory. Agents are scoped. Hooks are <em>mechanical enforcement</em>. They are bash (or any executable) that runs at lifecycle events. If you need to <strong>actually block</strong> an action — not just ask the LLM nicely — you need a hook.
+      </div>
+
+      <h2 class="section"><span class="id">8.1</span> The lifecycle</h2>
+      <p>kiro-cli fires events around the agent loop. Hooks are scripts you register against these events.</p>
+      <table>
+        <thead><tr><th>Event</th><th>When it fires</th><th>Can it block?</th></tr></thead>
+        <tbody>
+          <tr><td><code>agentSpawn</code></td><td>A session/agent starts</td><td>No (initialisation only)</td></tr>
+          <tr><td><code>userPromptSubmit</code></td><td>The user submits a prompt</td><td>Yes (exit non-zero to reject)</td></tr>
+          <tr><td><code>preToolUse</code></td><td>The LLM is about to call a tool</td><td><strong>Yes</strong> (exit code 2 blocks the call)</td></tr>
+          <tr><td><code>postToolUse</code></td><td>A tool has returned</td><td>No (side effects only)</td></tr>
+          <tr><td><code>stop</code></td><td>The agent is about to return final text</td><td>Yes (can force another turn)</td></tr>
+        </tbody>
+      </table>
+      <div class="pullquote">
+        <code>preToolUse</code> exit code <code>2</code> is the only mechanism that <strong>stops the LLM from doing something</strong>. Everything else either prepares or observes.
+      </div>
+
+      <h2 class="section"><span class="id">8.2</span> Where hooks live</h2>
+      <p>Workspace-scoped, committed with the repo:</p>
+<pre class="code-block">.kiro/hooks/
+├── pre-tool-use.sh
+├── post-tool-use.sh
+└── stop.sh</pre>
+      <p>Each script receives event data on stdin (JSON) and can return JSON on stdout to influence behavior. Exit code matters per event.</p>
+
+      <h2 class="section"><span class="id">8.3</span> Anatomy: block writes to infra/prod</h2>
+      <p><code>.kiro/hooks/pre-tool-use.sh</code>:</p>
+<pre class="code-block"><span class="comment">#!/usr/bin/env bash</span>
+<span class="keyword">set</span> -euo pipefail
+
+<span class="comment"># Read event payload from stdin</span>
+event=$(cat)
+
+tool=$(echo <span class="string">"$event"</span> | jq -r <span class="string">'.tool'</span>)
+path=$(echo <span class="string">"$event"</span> | jq -r <span class="string">'.input.path // empty'</span>)
+
+<span class="comment"># Block fs_write or execute_bash that touches infra/prod/</span>
+<span class="keyword">if</span> [[ <span class="string">"$tool"</span> == <span class="string">"fs_write"</span> &amp;&amp; <span class="string">"$path"</span> == infra/prod/* ]]; <span class="keyword">then</span>
+  echo <span class="string">'{"reason": "Direct writes to infra/prod/ are blocked. Use the prod-deploy spec."}'</span>
+  <span class="keyword">exit</span> 2   <span class="comment"># exit 2 = block the tool call</span>
+<span class="keyword">fi</span>
+
+<span class="keyword">exit</span> 0   <span class="comment"># allow</span></pre>
+      <p>Make it executable. From now on, any attempt by the LLM to write under <code>infra/prod/</code> is hard-blocked. The model sees the rejection reason and adapts.</p>
+
+      <h2 class="section"><span class="id">8.4</span> Hooks vs steering vs agent config</h2>
+      <table>
+        <thead><tr><th>Mechanism</th><th>Strength</th><th>Weakness</th></tr></thead>
+        <tbody>
+          <tr><td>Steering</td><td>Easy to write; advisory</td><td>LLM can ignore it</td></tr>
+          <tr><td>Agent config (tools / allowedPaths)</td><td>Enforced by harness; declarative</td><td>Coarse-grained; one config per session</td></tr>
+          <tr><td><strong>Hooks</strong></td><td>Programmatic; can inspect content; can block at exact decision points</td><td>Operational overhead; needs bash + jq skill in the team</td></tr>
+        </tbody>
+      </table>
+      <p>Use hooks when you need <strong>content-aware</strong> enforcement — e.g., "block <code>fs_write</code> to files containing the literal <code>secret=</code>" — which neither steering nor static config can express.</p>
+
+      <h2 class="section"><span class="id">8.5</span> Useful hook patterns</h2>
+      <table>
+        <thead><tr><th>Pattern</th><th>Event</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td>Lint after edit</td><td><code>postToolUse</code> (on <code>fs_write</code>)</td><td>Run <code>ruff</code> / <code>mypy</code>; surface errors to next turn</td></tr>
+          <tr><td>Block prod writes</td><td><code>preToolUse</code> (on <code>fs_write</code>)</td><td>Reject if path matches prod patterns</td></tr>
+          <tr><td>Audit log</td><td><code>postToolUse</code> (any)</td><td>Append tool name + path + diff hash to a log file</td></tr>
+          <tr><td>Stop confirmation</td><td><code>stop</code></td><td>Require the agent to summarise what it changed before exiting</td></tr>
+          <tr><td>Prompt injection guard</td><td><code>userPromptSubmit</code></td><td>Reject prompts that contain suspicious patterns</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="section"><span class="id">8.6</span> Hooks only fire on the main agent</h2>
+      <p>This was the trap from Module 7 — worth repeating:</p>
+      <div class="pullquote">
+        Hooks do not fire on subagents. If subagent enforcement matters, do it via the subagent's own config (tools whitelist, allowedPaths, prompt).
+      </div>
+      <p>If you need belt-and-braces enforcement, combine:</p>
+      <ul>
+        <li>Hook on parent (blocks main-agent dangerous tool use)</li>
+        <li>Restrictive agent config on each child (blocks the same things at the runtime level)</li>
+      </ul>
+      <p>Both layers fail closed independently.</p>
+
+      <h2 class="section"><span class="id">8.7</span> Common failure modes</h2>
+      <table>
+        <thead><tr><th>Failure</th><th>Cause</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>Hook doesn't fire</td><td>Wrong filename / not executable</td><td><code>chmod +x</code>; check event names; check <code>.kiro/hooks/</code> location</td></tr>
+          <tr><td>Hook silently allows everything</td><td>Exit code path through <code>0</code> even on rejection</td><td>Use <code>set -euo pipefail</code>; explicit <code>exit 2</code> for blocks</td></tr>
+          <tr><td>Hook breaks all tool use</td><td>Shell error → non-zero exit interpreted as block</td><td>Test the hook with a sample event payload before committing</td></tr>
+          <tr><td>Surprising subagent behavior</td><td>Hook on parent doesn't apply to children</td><td>Add equivalent restriction to subagent config</td></tr>
+        </tbody>
+      </table>
+
+      <div class="exercise">
+        <h3>Block .env writes with a hook</h3>
+        <p>Write a <code>preToolUse</code> hook that blocks any <code>fs_write</code> to a path containing <code>.env</code>:</p>
+<pre class="code-block"><span class="comment">#!/usr/bin/env bash</span>
+event=$(cat)
+tool=$(echo <span class="string">"$event"</span> | jq -r <span class="string">'.tool'</span>)
+path=$(echo <span class="string">"$event"</span> | jq -r <span class="string">'.input.path // empty'</span>)
+
+<span class="keyword">if</span> [[ <span class="string">"$tool"</span> == <span class="string">"fs_write"</span> &amp;&amp; <span class="string">"$path"</span> == *.env* ]]; <span class="keyword">then</span>
+  echo <span class="string">'{"reason": ".env files contain secrets. Edit manually."}'</span>
+  <span class="keyword">exit</span> 2
+<span class="keyword">fi</span>
+<span class="keyword">exit</span> 0</pre>
+        <p>Test by asking the agent: <em>"Update .env.local to add a new variable."</em> Confirm the rejection is surfaced cleanly.</p>
+      </div>
+
+      <h2 class="section"><span class="id">▢</span> Check yourself</h2>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m8-q1"><span class="chevron">›</span> 1. A <code>postToolUse</code> hook can block a tool call.</button>
+        <div class="reveal-content" id="rev-m8-q1">
+          <p><strong>False.</strong> It runs <em>after</em>. Use <code>preToolUse</code> with exit code 2 to block.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m8-q2"><span class="chevron">›</span> 2. Hooks apply to subagents the same as the main agent.</button>
+        <div class="reveal-content" id="rev-m8-q2">
+          <p><strong>False.</strong> Hooks fire only on the main agent.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m8-q3"><span class="chevron">›</span> 3. Steering can replace hooks for hard rules.</button>
+        <div class="reveal-content" id="rev-m8-q3">
+          <p><strong>False.</strong> Steering is advisory. Hooks enforce mechanically.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m8-q4"><span class="chevron">›</span> 4. Hooks must be bash.</button>
+        <div class="reveal-content" id="rev-m8-q4">
+          <p><strong>False.</strong> Any executable works — Python, Node, Go binary. Bash + jq is just the common pattern.</p>
+        </div>
+      </div>
+
+      <nav class="module-nav">
+        <a href="#module-7">
+          <div class="nav-label">— Previous</div>
+          <div class="nav-title">07 · Multi-agent &amp; Subagents</div>
+        </a>
+        <a class="next" href="#module-9">
+          <div class="nav-label">Next module —</div>
+          <div class="nav-title">09 · Specs</div>
+        </a>
+      </nav>
+    </article>
+
+    <!-- ===================== MODULE 9 ===================== -->
+    <article class="module-content" id="module-9">
+      <div class="module-meta">
+        <span>Module 09</span>
+        <span class="dot">//</span>
+        <span class="accent">Part 2 — kiro-cli Primitives</span>
+        <span class="dot">//</span>
+        <span>~12 min</span>
+      </div>
+      <div class="module-number">09</div>
+      <h1 class="module-title">Specs: <span class="em">gated</span> builds</h1>
+      <div class="module-lede">
+        For non-trivial work — anything beyond "tweak this function" — you want explicit alignment <em>before</em> code. Specs give you a three-stage, human-gated build: requirements → design → tasks. The output is a directory of markdown files the agent then implements.
+      </div>
+
+      <h2 class="section"><span class="id">9.1</span> When to use a spec</h2>
+      <p>Use a spec when:</p>
+      <ul>
+        <li>The task touches more than 2-3 files</li>
+        <li>Requirements are unclear and need to be teased out</li>
+        <li>You want a record of what was decided before code existed</li>
+        <li>The work spans multiple sessions (you need persistent state)</li>
+        <li>Stakeholders need to review the plan before execution</li>
+      </ul>
+      <p>Skip the spec when:</p>
+      <ul>
+        <li>The task is a clear one-shot ("rename this variable everywhere")</li>
+        <li>You already know the design</li>
+        <li>The work fits in one conversation</li>
+      </ul>
+      <div class="pullquote">
+        Specs trade speed for clarity. For agentic work, the clarity is usually worth it.
+      </div>
+
+      <h2 class="section"><span class="id">9.2</span> The three documents</h2>
+      <p>A spec is a directory:</p>
+<pre class="code-block">.kiro/specs/&lt;feature-name&gt;/
+├── requirements.md   <span class="comment"># What we're building, in EARS notation</span>
+├── design.md         <span class="comment"># How we'll build it</span>
+└── tasks.md          <span class="comment"># The implementation breakdown</span></pre>
+      <p>Each document is built in order, with a <strong>human-in-the-loop gate</strong> before moving to the next.</p>
+      <table>
+        <thead><tr><th>Stage</th><th>What it contains</th><th>Gate</th></tr></thead>
+        <tbody>
+          <tr><td>Requirements</td><td>EARS-format requirements, acceptance criteria</td><td>User reviews + approves before design</td></tr>
+          <tr><td>Design</td><td>Architecture, data model, interfaces, sequence</td><td>User reviews + approves before tasks</td></tr>
+          <tr><td>Tasks</td><td>Numbered, parallelisable, atomic tasks</td><td>User can edit before execution</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="section"><span class="id">9.3</span> EARS notation</h2>
+      <p><strong>Easy Approach to Requirements Syntax.</strong> Five canonical patterns that force unambiguous requirements:</p>
+      <table>
+        <thead><tr><th>Pattern</th><th>Form</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td>Ubiquitous</td><td>"The system shall X"</td><td>The system shall log every authentication attempt.</td></tr>
+          <tr><td>Event-driven</td><td>"When X, the system shall Y"</td><td>When a user submits an invalid token, the system shall return HTTP 401.</td></tr>
+          <tr><td>State-driven</td><td>"While X, the system shall Y"</td><td>While in maintenance mode, the system shall return HTTP 503.</td></tr>
+          <tr><td>Conditional</td><td>"If X, then the system shall Y"</td><td>If the rate-limit is exceeded, then the system shall return HTTP 429.</td></tr>
+          <tr><td>Optional</td><td>"Where X, the system shall Y"</td><td>Where multi-tenant is enabled, the system shall scope all queries by tenant_id.</td></tr>
+        </tbody>
+      </table>
+      <p>EARS feels stilted at first. That's the point — <strong>ambiguity in requirements becomes bugs in code.</strong> Forcing the structure exposes the ambiguity before code.</p>
+
+      <h2 class="section"><span class="id">9.4</span> Worked example: requirements.md</h2>
+<pre class="code-block"><span class="comment"># Requirements: API Key Rotation</span>
+
+<span class="comment">## REQ-1: Key generation</span>
+The system shall generate new API keys using 256-bit random tokens.
+
+<span class="comment">## REQ-2: Active key rotation</span>
+When an admin triggers rotation for a tenant, the system shall:
+- Generate a new key marked `active`
+- Mark the previous key `deprecated` with a 30-day expiry
+- Emit a `key.rotated` event to the audit log
+
+<span class="comment">## REQ-3: Deprecated key acceptance</span>
+While a key is in `deprecated` state and within its expiry window, the system
+shall accept it but return a `X-Key-Deprecated` response header.
+
+<span class="comment">## REQ-4: Expiry enforcement</span>
+If a key has expired, the system shall return HTTP 401 with body
+`{"error": "key_expired"}`.
+
+<span class="comment">## Out of scope</span>
+- Per-endpoint key restrictions (future work)
+- Programmatic rotation by tenant (admin only for v1)</pre>
+      <p>A senior engineer can sanity-check this in two minutes. The agent has zero room to invent behavior.</p>
+
+      <h2 class="section"><span class="id">9.5</span> design.md</h2>
+      <p>After requirements approval, the agent produces a design:</p>
+<pre class="code-block"><span class="comment"># Design: API Key Rotation</span>
+
+<span class="comment">## Data model</span>
+- `api_keys` table:
+  - `id` (uuid), `tenant_id` (uuid), `hash` (sha256), `status` (enum: active|deprecated|revoked),
+    `expires_at` (timestamp nullable), `created_at`, `rotated_from_id` (nullable)
+
+<span class="comment">## API surface</span>
+- `POST /admin/tenants/{tenant_id}/keys/rotate` — admin endpoint
+- Existing middleware: `verify_key()` updated to handle `deprecated` status
+
+<span class="comment">## Sequence (rotation)</span>
+1. Admin POST hits the rotate endpoint
+2. Service generates new token, hashes, inserts as `active`
+3. Existing `active` row updated to `deprecated`, `expires_at = now + 30d`
+4. `key.rotated` event published to SNS
+5. Response returns the new plaintext token (one-time)
+
+<span class="comment">## Tradeoffs considered</span>
+- Soft delete vs hard delete: soft delete chosen for audit trail
+- 30-day expiry chosen to match SOC2 requirements</pre>
+      <p>User reviews. If the data-model or API choice is wrong, this is the cheapest moment to catch it — before any code.</p>
+
+      <h2 class="section"><span class="id">9.6</span> tasks.md</h2>
+<pre class="code-block"><span class="comment"># Tasks: API Key Rotation</span>
+
+- [ ] T1: Create migration for `api_keys` schema changes
+- [ ] T2: Update `ApiKey` Pydantic model with new fields
+- [ ] T3: Update `verify_key()` middleware to handle `deprecated` status
+- [ ] T4: Add `POST /admin/tenants/{tenant_id}/keys/rotate` endpoint
+- [ ] T5: Publish `key.rotated` event to SNS topic `audit-events`
+- [ ] T6: Tests: rotation flow, deprecated key acceptance, expiry enforcement
+- [ ] T7: Update docs: `docs/api/auth.md`
+
+Dependencies: T2 depends on T1. T3-T5 can run in parallel after T2.</pre>
+      <p>The agent (or a fan-out orchestrator) implements one task at a time, marking it done, running tests. The tasks list is your durable progress tracker.</p>
+
+      <h2 class="section"><span class="id">9.7</span> Specs vs other primitives</h2>
+      <table>
+        <thead><tr><th>You want…</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td>Quick rules the agent applies always</td><td>Steering</td></tr>
+          <tr><td>A named, repeatable workflow</td><td>Skill</td></tr>
+          <tr><td>A constrained runtime</td><td>Agent config</td></tr>
+          <tr><td>Hard enforcement</td><td>Hook</td></tr>
+          <tr><td><strong>Multi-stage, gated build of something non-trivial</strong></td><td><strong>Spec</strong></td></tr>
+        </tbody>
+      </table>
+      <p>Specs are the heaviest primitive. Don't reach for them on small tasks — overhead &gt; value.</p>
+
+      <h2 class="section"><span class="id">9.8</span> Patterns</h2>
+      <ul>
+        <li><strong>Spec for feature, skill for procedure.</strong> A spec builds a feature once; a skill runs a procedure repeatedly.</li>
+        <li><strong>Specs as RFC.</strong> Treat <code>requirements.md</code> and <code>design.md</code> like internal RFCs — review them as artefacts, not just intermediate agent output.</li>
+        <li><strong>Tasks become MR titles.</strong> Each task is small enough to be one MR. Helps with review.</li>
+        <li><strong>Pause between stages.</strong> Don't let the agent rush all three in one turn. The gate is the point.</li>
+      </ul>
+
+      <div class="exercise">
+        <h3>Walk through a real spec</h3>
+        <p>Pick a small real feature your team has in flight (or an idea). In kiro-cli, ask:</p>
+<pre class="code-block"><span class="string">Create a spec for: "Add a per-tenant audit log that captures
+all API key operations."</span></pre>
+        <p>Walk through all three stages. Stop at each gate, edit the documents, push back on assumptions the agent made. Notice how much clearer the implementation phase becomes when the design is settled.</p>
+      </div>
+
+      <h2 class="section"><span class="id">▢</span> Check yourself</h2>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m9-q1"><span class="chevron">›</span> 1. Specs are for any task more than 50 lines of code.</button>
+        <div class="reveal-content" id="rev-m9-q1">
+          <p><strong>False.</strong> Heuristic is multi-file + unclear requirements. Many large refactors don't need a spec; some small features do.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m9-q2"><span class="chevron">›</span> 2. EARS notation is just a style preference.</button>
+        <div class="reveal-content" id="rev-m9-q2">
+          <p><strong>False.</strong> It forces unambiguous requirements. Ambiguity in requirements becomes bugs.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m9-q3"><span class="chevron">›</span> 3. I can skip the design stage and go straight from requirements to tasks.</button>
+        <div class="reveal-content" id="rev-m9-q3">
+          <p><strong>Technically yes, practically no.</strong> The design stage is where most expensive mistakes get caught.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m9-q4"><span class="chevron">›</span> 4. The agent should auto-approve and continue between stages.</button>
+        <div class="reveal-content" id="rev-m9-q4">
+          <p><strong>False.</strong> The human gate is the entire point of specs.</p>
+        </div>
+      </div>
+
+      <div class="callout" style="margin-top: 48px; border-color: var(--border-amber);">
+        <div class="label">End of Part 2</div>
+        <p>You now have all six kiro-cli primitives:</p>
+        <ul>
+          <li><strong>Steering</strong> — durable rules in markdown</li>
+          <li><strong>Skills</strong> — invokable workflows as slash commands</li>
+          <li><strong>Agents</strong> — scoped runtime configurations</li>
+          <li><strong>Multi-agent / Subagents</strong> — orchestration with bounded children</li>
+          <li><strong>Hooks</strong> — mechanical enforcement at lifecycle events</li>
+          <li><strong>Specs</strong> — multi-stage gated builds with human review</li>
+        </ul>
+        <p>Part 3 is about <strong>using these well</strong> — context management, planning, the operating surface, best practices, and hands-on labs.</p>
+      </div>
+
+      <nav class="module-nav">
+        <a href="#module-8">
+          <div class="nav-label">— Previous</div>
+          <div class="nav-title">08 · Hooks</div>
+        </a>
+        <a class="next" href="#module-10">
+          <div class="nav-label">Next module —</div>
+          <div class="nav-title">10 · Context Management</div>
+        </a>
+      </nav>
+    </article>
+
+    <!-- ===================== MODULE 10 ===================== -->
+    <article class="module-content" id="module-10">
+      <div class="module-meta">
+        <span>Module 10</span>
+        <span class="dot">//</span>
+        <span class="accent">Part 3 — Patterns and Discipline</span>
+        <span class="dot">//</span>
+        <span>~12 min</span>
+      </div>
+      <div class="module-number">10</div>
+      <h1 class="module-title">Context: the <span class="em">scarce</span> resource</h1>
+      <div class="module-lede">
+        Context is the agent's working memory. It's finite. It's expensive. It decays as conversations grow. <strong>Managing it deliberately is the single most important operational skill in agentic coding</strong> — more than prompt-crafting, more than tool selection.
+      </div>
+
+      <h2 class="section"><span class="id">10.1</span> What's in context every turn</h2>
+      <p>On every model call, kiro-cli assembles a payload that typically includes:</p>
+      <ul>
+        <li><strong>System prompt</strong> (agent-specific from the config)</li>
+        <li><strong>Always-loaded steering</strong> — <code>AGENTS.md</code> + <code>inclusion: always</code> files</li>
+        <li><strong>Conditionally-loaded steering</strong> — <code>fileMatch</code>-glob files that became relevant</li>
+        <li><strong>Resources</strong> — anything in the agent's <code>resources</code> array</li>
+        <li><strong>Conversation history</strong> — every prior user message, assistant message, tool call, tool result</li>
+        <li><strong>The current user prompt</strong></li>
+      </ul>
+      <p>All of this counts against the context window. Frontier models top out at ~200K tokens. By turn 50 of a real session, you can easily hit 100K+ just from accumulated history.</p>
+
+      <h2 class="section"><span class="id">10.2</span> Inspecting context</h2>
+      <p>In the TUI:</p>
+<pre class="code-block">/context</pre>
+      <p>Shows what's currently loaded — steering files, resources, token counts. <strong>Use this. Often.</strong> Most "why is the agent ignoring my rule?" problems are revealed by <code>/context</code> showing the rule wasn't loaded.</p>
+      <p>Other useful commands (Module 12 deep-dive):</p>
+      <ul>
+        <li><code>/tools</code> — what tools this session has</li>
+        <li><code>/mcp</code> — which MCP servers are connected</li>
+        <li><code>/compact</code> — summarise history to free tokens (loses fidelity)</li>
+        <li><code>/clear</code> — wipe conversation, keep agent + steering</li>
+      </ul>
+
+      <h2 class="section"><span class="id">10.3</span> The three context budgets</h2>
+      <p>Mental model: you're managing three competing budgets.</p>
+      <table>
+        <thead><tr><th>Budget</th><th>Driven by</th><th>If you exceed</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Window</strong> (~200K tokens)</td><td>Total context size</td><td>Request fails or truncates silently</td></tr>
+          <tr><td><strong>Cost</strong> (latency + $)</td><td>Per-turn token count</td><td>Slow, expensive turns</td></tr>
+          <tr><td><strong>Signal</strong> (attention)</td><td>Relevance of what's in context</td><td>Model loses focus, ignores rules, hallucinates</td></tr>
+        </tbody>
+      </table>
+      <p>The signal budget is the sneaky one. Even if you fit in the window, <strong>a context full of stale tool results is noisier than a smaller, curated one.</strong> The model attends less to instructions buried under 50K tokens of old <code>fs_read</code> output.</p>
+
+      <h2 class="section"><span class="id">10.4</span> Context decay strategies</h2>
+      <p>Four moves, ranked by cost:</p>
+      <ol>
+        <li><strong><code>/clear</code></strong> — start fresh. Cheapest move. Keep agent + steering, drop history. Use when one task is done and the next is unrelated.</li>
+        <li><strong><code>/compact</code></strong> — summarise history into a smaller version. Mid-cost. Use when you need to keep going but history has gotten bloated. Beware: details get lost.</li>
+        <li><strong>New session entirely</strong> — exit and restart. Forces full reset. Use after long sessions where state has accumulated unpredictably.</li>
+        <li><strong>Spec-driven multi-session work</strong> — for long-running features, drop spec docs (Module 9) and pick up later. Spec files preserve state where chat can't.</li>
+      </ol>
+
+      <h2 class="section"><span class="id">10.5</span> What inflates context the fastest</h2>
+      <table>
+        <thead><tr><th>Source</th><th>Typical bloat</th></tr></thead>
+        <tbody>
+          <tr><td>Tool results — file reads on large files</td><td>5K-50K tokens per call</td></tr>
+          <tr><td>Conversation history (every turn repeats)</td><td>Linear growth</td></tr>
+          <tr><td>Many always-loaded steering files</td><td>Constant per-turn cost</td></tr>
+          <tr><td>Verbose system prompts</td><td>Constant per-turn cost</td></tr>
+          <tr><td>MCP tool results</td><td>Variable; can be large for DB query results</td></tr>
+        </tbody>
+      </table>
+      <p>Defensive habits:</p>
+      <ul>
+        <li>Prefer <code>grep</code> and targeted reads over <code>cat</code>ing entire files</li>
+        <li>Keep <code>AGENTS.md</code> short</li>
+        <li>Move bulk content to <code>fileMatch</code> steering or <code>manual</code> skills</li>
+        <li>For long sessions, periodically <code>/compact</code> or <code>/clear</code></li>
+      </ul>
+
+      <h2 class="section"><span class="id">10.6</span> Patterns that work</h2>
+      <ul>
+        <li><strong>One session per task.</strong> Don't run "fix the auth bug" and "add a new endpoint" in the same session.</li>
+        <li><strong>Read narrowly.</strong> Before letting the agent <code>fs_read</code> a 5K-line file, ask if it can <code>grep</code> for the symbol first.</li>
+        <li><strong>Cite, don't re-read.</strong> Tell the agent "you read <code>auth.py</code> earlier; assume that still holds" rather than letting it re-read.</li>
+        <li><strong>Push state into files, not chat.</strong> Notes, decisions, intermediate findings — write them to a file the agent can re-read later.</li>
+        <li><strong>Subagents for noisy work.</strong> When investigation will produce a lot of tool calls, spawn a subagent and let it return a summary (Module 7).</li>
+      </ul>
+
+      <h2 class="section"><span class="id">10.7</span> Common failure modes</h2>
+      <table>
+        <thead><tr><th>Failure</th><th>Cause</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>Agent ignores explicit rule</td><td>Rule not loaded, or buried under noise</td><td>Run <code>/context</code>; trim noise; move rule to always-load steering</td></tr>
+          <tr><td>Replies get slower over time</td><td>History accumulating</td><td><code>/compact</code> or <code>/clear</code></td></tr>
+          <tr><td>Agent contradicts earlier decisions</td><td>Context decay; older turns deprioritised</td><td>Externalise decisions to a notes file the agent re-reads</td></tr>
+          <tr><td>"Out of context" errors</td><td>Window exceeded</td><td>Spec-driven workflow; subagent fan-out; aggressive <code>/clear</code></td></tr>
+        </tbody>
+      </table>
+
+      <div class="exercise">
+        <h3>Watch context grow</h3>
+        <p>In a real repo, start a fresh kiro-cli session. Run:</p>
+<pre class="code-block">/context</pre>
+        <p>Note the token count. Then have a 5-turn conversation that includes reading 2-3 files. Run <code>/context</code> again. Note the growth.</p>
+        <p>Then <code>/compact</code>. Compare. Then <code>/clear</code>. Compare again. Get a feel for what each move costs.</p>
+      </div>
+
+      <h2 class="section"><span class="id">▢</span> Check yourself</h2>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m10-q1"><span class="chevron">›</span> 1. A larger context window solves context management problems.</button>
+        <div class="reveal-content" id="rev-m10-q1">
+          <p><strong>False.</strong> Window helps capacity. The signal-budget problem (model attention) gets worse with bloat.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m10-q2"><span class="chevron">›</span> 2. <code>/compact</code> is lossless.</button>
+        <div class="reveal-content" id="rev-m10-q2">
+          <p><strong>False.</strong> It summarises. Details are dropped. Useful but not free.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m10-q3"><span class="chevron">›</span> 3. Steering files are free because they're loaded automatically.</button>
+        <div class="reveal-content" id="rev-m10-q3">
+          <p><strong>False.</strong> They count against the window and cost tokens on every turn.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m10-q4"><span class="chevron">›</span> 4. The right pattern is one long session per project.</button>
+        <div class="reveal-content" id="rev-m10-q4">
+          <p><strong>False.</strong> One session per task. Fresh windows for fresh problems.</p>
+        </div>
+      </div>
+
+      <nav class="module-nav">
+        <a href="#module-9">
+          <div class="nav-label">— Previous</div>
+          <div class="nav-title">09 · Specs</div>
+        </a>
+        <a class="next" href="#module-11">
+          <div class="nav-label">Next module —</div>
+          <div class="nav-title">11 · Orchestration &amp; Planning</div>
+        </a>
+      </nav>
+    </article>
+
+    <!-- ===================== MODULE 11 ===================== -->
+    <article class="module-content" id="module-11">
+      <div class="module-meta">
+        <span>Module 11</span>
+        <span class="dot">//</span>
+        <span class="accent">Part 3 — Patterns and Discipline</span>
+        <span class="dot">//</span>
+        <span>~10 min</span>
+      </div>
+      <div class="module-number">11</div>
+      <h1 class="module-title">Orchestration &amp; <span class="em">planning</span></h1>
+      <div class="module-lede">
+        The non-deterministic engine works best on small, well-scoped pieces. The skill is structuring real work so it decomposes into pieces the agent can ship reliably. That's orchestration.
+      </div>
+
+      <h2 class="section"><span class="id">11.1</span> The research → plan → implement loop</h2>
+      <p>For anything beyond a one-line change, run this three-pass pattern in kiro-cli:</p>
+      <ol>
+        <li><strong>Research</strong> — agent reads the relevant files, runs <code>grep</code>, queries MCP servers. Goal: ground the model in the actual state of the code. Output: a written summary of what exists today.</li>
+        <li><strong>Plan</strong> — agent proposes an approach. Files to change, order of changes, risks. Output: a numbered plan. <strong>You review.</strong></li>
+        <li><strong>Implement</strong> — agent executes the plan, one step at a time, running tests after each.</li>
+      </ol>
+      <p>The gate between 2 and 3 is where you catch most disasters. The cost of a bad plan corrected in 2 is one minute. The cost of a bad plan implemented in 3 is hours.</p>
+
+      <h2 class="section"><span class="id">11.2</span> Why not "just do it"</h2>
+      <p>It's tempting to say "fix this bug" and let the agent loose. Why structure?</p>
+      <table>
+        <thead><tr><th>Without research → plan → implement</th><th>With it</th></tr></thead>
+        <tbody>
+          <tr><td>Agent invents details that don't match reality</td><td>Grounded in real code</td></tr>
+          <tr><td>You discover bad approach after files are changed</td><td>Catch in plan phase</td></tr>
+          <tr><td>Long opaque tool-call stream</td><td>Reviewable artefact at each stage</td></tr>
+          <tr><td>Hard to resume after interruption</td><td>Plan is a re-entry point</td></tr>
+          <tr><td>Token waste on speculative reading</td><td>Targeted reads</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="section"><span class="id">11.3</span> How to invoke the pattern in practice</h2>
+      <p>You don't need a primitive for this — a steering rule and a prompt convention is enough.</p>
+      <p><code>AGENTS.md</code> snippet:</p>
+<pre class="code-block"><span class="comment">## Working style</span>
+For any task touching more than 2 files:
+1. First, summarise what you've read and what currently exists. Stop and confirm.
+2. Then propose a numbered plan. Stop and confirm.
+3. Only then implement, one step at a time, running tests after each.
+Do not skip steps. Do not combine them.</pre>
+      <p>For larger work, use a <strong>spec</strong> (Module 9). For one-off-but-careful work, this lighter pattern works.</p>
+
+      <h2 class="section"><span class="id">11.4</span> TODO lists and progress reporting</h2>
+      <p>For multi-step implementations, ask the agent to maintain an explicit TODO list:</p>
+<pre class="code-block"><span class="string">Implement the API key rotation feature. Maintain a TODO list in this conversation,
+mark items as you complete them, and call report_progress between items.</span></pre>
+      <p>Two benefits:</p>
+      <ul>
+        <li><strong>Recoverable.</strong> If context decays or session restarts, the TODO is the resume point.</li>
+        <li><strong>Visible.</strong> You can see at a glance what's done and what isn't.</li>
+      </ul>
+      <p>The <code>report_progress</code> built-in tool surfaces status to the TUI — useful for long-running tasks.</p>
+
+      <h2 class="section"><span class="id">11.5</span> Subagent fan-out for parallel orchestration</h2>
+      <p>When research or implementation has independent branches, use subagents (Module 7):</p>
+      <ul>
+        <li><strong>Research fan-out</strong> — parent dispatches subagents to investigate different subsystems in parallel; collects summaries.</li>
+        <li><strong>Implementation fan-out</strong> — after plan approval, parent dispatches each task to a scoped writer subagent.</li>
+      </ul>
+      <p>Caveat: only use fan-out when work is genuinely independent. Sequential tasks with state dependencies are simpler in one agent.</p>
+
+      <h2 class="section"><span class="id">11.6</span> When orchestration becomes overhead</h2>
+      <p>Don't apply this pattern when:</p>
+      <ul>
+        <li>The task is trivial (one-liner, obvious change)</li>
+        <li>You're exploring or prototyping (research-as-you-go is fine)</li>
+        <li>The agent will produce a discardable artefact (a one-shot draft)</li>
+      </ul>
+      <p>Match the discipline to the stakes.</p>
+
+      <h2 class="section"><span class="id">11.7</span> Patterns</h2>
+      <table>
+        <thead><tr><th>Pattern</th><th>When</th><th>Tools</th></tr></thead>
+        <tbody>
+          <tr><td>Inline 3-pass (chat)</td><td>Multi-file change, one session</td><td>Steering rule + prompt convention</td></tr>
+          <tr><td>Spec</td><td>Feature, requirements unclear, multi-session</td><td>Module 9</td></tr>
+          <tr><td>Orchestrator + subagents</td><td>Parallel investigation or scoped writes</td><td>Module 7</td></tr>
+          <tr><td>TODO list in chat</td><td>Long implementation, one session</td><td><code>report_progress</code> + prompt</td></tr>
+        </tbody>
+      </table>
+
+      <div class="exercise">
+        <h3>Two ways to run the same task</h3>
+        <p>Pick a real medium-complexity task in your repo. Run it in kiro-cli two ways:</p>
+        <p><strong>Way 1:</strong> "Just do it." Single prompt with the task and no structure. Note what happens.</p>
+        <p><strong>Way 2:</strong> Same task, but include in the prompt:</p>
+<pre class="code-block"><span class="string">Three phases: (1) research and summarise. Stop. (2) Propose a numbered plan. Stop. (3) Implement, one step at a time.</span></pre>
+        <p>Compare quality, time-to-correct, and how confident you were in the outcome. The structure usually wins by a wide margin for anything non-trivial.</p>
+      </div>
+
+      <h2 class="section"><span class="id">▢</span> Check yourself</h2>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m11-q1"><span class="chevron">›</span> 1. The research phase is wasted time.</button>
+        <div class="reveal-content" id="rev-m11-q1">
+          <p><strong>False.</strong> It's the cheapest place to catch wrong assumptions.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m11-q2"><span class="chevron">›</span> 2. Specs and the 3-pass pattern are the same thing.</button>
+        <div class="reveal-content" id="rev-m11-q2">
+          <p><strong>False.</strong> Specs are persisted, multi-session, with formal documents. 3-pass is in-conversation and lightweight.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m11-q3"><span class="chevron">›</span> 3. Fan-out always speeds things up.</button>
+        <div class="reveal-content" id="rev-m11-q3">
+          <p><strong>False.</strong> Only when tasks are genuinely independent. Sequential work parallelised becomes coordination overhead.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m11-q4"><span class="chevron">›</span> 4. <code>report_progress</code> is required for orchestration.</button>
+        <div class="reveal-content" id="rev-m11-q4">
+          <p><strong>False.</strong> It helps visibility but isn't load-bearing. A maintained TODO in chat works too.</p>
+        </div>
+      </div>
+
+      <nav class="module-nav">
+        <a href="#module-10">
+          <div class="nav-label">— Previous</div>
+          <div class="nav-title">10 · Context Management</div>
+        </a>
+        <a class="next" href="#module-12">
+          <div class="nav-label">Next module —</div>
+          <div class="nav-title">12 · Operating Surface</div>
+        </a>
+      </nav>
+    </article>
+
+    <!-- ===================== MODULE 12 ===================== -->
+    <article class="module-content" id="module-12">
+      <div class="module-meta">
+        <span>Module 12</span>
+        <span class="dot">//</span>
+        <span class="accent">Part 3 — Patterns and Discipline</span>
+        <span class="dot">//</span>
+        <span>~9 min</span>
+      </div>
+      <div class="module-number">12</div>
+      <h1 class="module-title">The <span class="em">operating</span> surface</h1>
+      <div class="module-lede">
+        The TUI commands, the headless CLI, the auth model, the tier gotchas. Below the abstractions of Parts 1 and 2 sits the actual surface you operate. Skim once, return when needed.
+      </div>
+
+      <h2 class="section"><span class="id">12.1</span> Interactive slash commands</h2>
+      <table>
+        <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>/agent</code></td><td>List agents; switch with <code>/agent &lt;name&gt;</code></td></tr>
+          <tr><td><code>/context</code></td><td>Show what's currently in context: steering, resources, token counts</td></tr>
+          <tr><td><code>/tools</code></td><td>Show available tools for this session</td></tr>
+          <tr><td><code>/mcp</code></td><td>List connected MCP servers and their tools</td></tr>
+          <tr><td><code>/clear</code></td><td>Wipe conversation history, keep agent + steering</td></tr>
+          <tr><td><code>/compact</code></td><td>Summarise history to reduce tokens (lossy)</td></tr>
+          <tr><td><code>/resume</code></td><td>Reload a previous session (where supported)</td></tr>
+          <tr><td><code>/help</code></td><td>List commands</td></tr>
+        </tbody>
+      </table>
+      <p>Habit: <code>/context</code> early and often. Most "the agent isn't behaving" issues are visible there.</p>
+
+      <h2 class="section"><span class="id">12.2</span> Headless mode</h2>
+      <p>For CI/CD, scripts, and automation:</p>
+<pre class="code-block">kiro-cli --no-interactive --agent code-reviewer <span class="string">"Review the diff in MR !1234"</span></pre>
+      <p>Headless mode:</p>
+      <ul>
+        <li>No TUI; output to stdout</li>
+        <li>Exit code reflects success/failure</li>
+        <li>Subagents and hooks still run</li>
+        <li>Permissions: typically denies any tool that would prompt for confirmation; either pre-approve via <code>trustedAgents</code> / config, or use the <code>--auto-approve</code> flag (treat carefully)</li>
+      </ul>
+      <p>GitLab CI example:</p>
+<pre class="code-block"><span class="keyword">agent-review</span><span class="symbol">:</span>
+  <span class="keyword">stage</span><span class="symbol">:</span> test
+  <span class="keyword">image</span><span class="symbol">:</span> ${KIRO_CLI_IMAGE}
+  <span class="keyword">variables</span><span class="symbol">:</span>
+    <span class="keyword">KIRO_API_KEY</span><span class="symbol">:</span> $KIRO_API_KEY
+  <span class="keyword">script</span><span class="symbol">:</span>
+    - kiro-cli --no-interactive --agent code-reviewer
+              <span class="string">"Review the diff between $CI_MERGE_REQUEST_DIFF_BASE_SHA and HEAD.
+               Output markdown to stdout."</span>
+              > review.md
+  <span class="keyword">artifacts</span><span class="symbol">:</span>
+    <span class="keyword">paths</span><span class="symbol">:</span> [review.md]</pre>
+      <p>This is roughly the agent-platform pattern, with a runner that has the <code>gitlab--duo</code> tag and a <code>KIRO_API_KEY</code> from CI variables.</p>
+
+      <h2 class="section"><span class="id">12.3</span> Auth and configuration</h2>
+      <table>
+        <thead><tr><th>Concern</th><th>Setting</th></tr></thead>
+        <tbody>
+          <tr><td>Auth</td><td><code>KIRO_API_KEY</code> env var (or AWS SSO-backed)</td></tr>
+          <tr><td>Region</td><td><code>AWS_REGION</code> if using Bedrock-backed models</td></tr>
+          <tr><td>Config root</td><td><code>~/.aws/kiro-cli/</code> (global) and <code>.kiro/</code> (workspace)</td></tr>
+          <tr><td>Logging</td><td><code>~/.aws/kiro-cli/logs/</code> — useful when debugging tool calls</td></tr>
+        </tbody>
+      </table>
+      <p>For team setups: store the API key in your secrets manager, inject as CI variable for pipelines, use SSO locally.</p>
+
+      <h2 class="section"><span class="id">12.4</span> Tier gotchas</h2>
+      <p>A few practical realities of using kiro-cli at scale:</p>
+      <ul>
+        <li><strong>Rate limits</strong> apply per account/tier — burst usage in CI can throttle</li>
+        <li><strong>Model availability</strong> varies; some agents may not support all models on all tiers</li>
+        <li><strong>Credits</strong> consume against your plan; track usage especially for fan-out orchestrations</li>
+        <li><strong>Runner tag</strong> <code>gitlab--duo</code> is required for the GitLab agent platform integration</li>
+        <li><strong>Version pinning</strong> — kiro-cli evolves quickly; pin a version in CI containers, upgrade deliberately</li>
+      </ul>
+      <p>When something stops working between minor versions, check the changelog before debugging your config.</p>
+
+      <h2 class="section"><span class="id">12.5</span> Editor integration</h2>
+      <p>kiro-cli ships standalone, but Kiro IDE (or the editor companion plugin) gives a richer surface — inline suggestions, MR-attached reviews, in-editor steering edits. <strong>The configs are the same.</strong> Whatever lives in <code>.kiro/</code> works in both surfaces.</p>
+      <p>If your team uses VS Code, look for the Kiro plugin. Same primitives, different ergonomics.</p>
+
+      <h2 class="section"><span class="id">12.6</span> Diagnostic patterns</h2>
+      <p>When an agent misbehaves:</p>
+      <ol>
+        <li><code>/context</code> — is the rule loaded?</li>
+        <li><code>/tools</code> — does the agent have the tools it needs?</li>
+        <li><code>/mcp</code> — are MCP servers connected?</li>
+        <li>Check logs in <code>~/.aws/kiro-cli/logs/</code></li>
+        <li>Reproduce with a minimal prompt to isolate</li>
+      </ol>
+      <p>When CI runs misbehave:</p>
+      <ol>
+        <li>Run the same command headless on your laptop</li>
+        <li>Compare env vars; <code>KIRO_API_KEY</code>, <code>AWS_REGION</code> set in CI?</li>
+        <li>Check the runner has the <code>gitlab--duo</code> tag and the image has kiro-cli installed</li>
+        <li>Hooks: are they executable in the CI container?</li>
+      </ol>
+
+      <h2 class="section"><span class="id">▢</span> Check yourself</h2>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m12-q1"><span class="chevron">›</span> 1. Headless mode disables hooks and subagents.</button>
+        <div class="reveal-content" id="rev-m12-q1">
+          <p><strong>False.</strong> Both run. Permissions may differ.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m12-q2"><span class="chevron">›</span> 2. <code>/clear</code> deletes my steering files.</button>
+        <div class="reveal-content" id="rev-m12-q2">
+          <p><strong>False.</strong> It clears conversation history. Steering files on disk are untouched.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m12-q3"><span class="chevron">›</span> 3. I should commit <code>KIRO_API_KEY</code> to the repo for team sharing.</button>
+        <div class="reveal-content" id="rev-m12-q3">
+          <p><strong>False.</strong> Use CI secrets / secrets manager. Never commit keys.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m12-q4"><span class="chevron">›</span> 4. The IDE plugin and the CLI use different configs.</button>
+        <div class="reveal-content" id="rev-m12-q4">
+          <p><strong>False.</strong> Same <code>.kiro/</code> dir. Same primitives.</p>
+        </div>
+      </div>
+
+      <nav class="module-nav">
+        <a href="#module-11">
+          <div class="nav-label">— Previous</div>
+          <div class="nav-title">11 · Orchestration &amp; Planning</div>
+        </a>
+        <a class="next" href="#module-13">
+          <div class="nav-label">Next module —</div>
+          <div class="nav-title">13 · Best Practices</div>
+        </a>
+      </nav>
+    </article>
+
+    <!-- ===================== MODULE 13 ===================== -->
+    <article class="module-content" id="module-13">
+      <div class="module-meta">
+        <span>Module 13</span>
+        <span class="dot">//</span>
+        <span class="accent">Part 3 — Patterns and Discipline</span>
+        <span class="dot">//</span>
+        <span>~11 min</span>
+      </div>
+      <div class="module-number">13</div>
+      <h1 class="module-title">Best <span class="em">practices</span> and failure modes</h1>
+      <div class="module-lede">
+        A synthesis. The patterns that distinguish teams who get value from kiro-cli from teams who fight it. Plus the LICENSE gotcha that's caught more than one team off-guard.
+      </div>
+
+      <h2 class="section"><span class="id">13.1</span> The mantra</h2>
+      <div class="pullquote">
+        Describe with steering. Restrict with agents. Encode know-how in skills.
+      </div>
+      <p>Three sentences. Internalise them. Every kiro-cli design decision should be testable against this.</p>
+      <ul>
+        <li>A team rule? → steering</li>
+        <li>A repeatable procedure? → skill</li>
+        <li>A bounded runtime for a risky job? → agent</li>
+      </ul>
+      <p>When in doubt, default to the lightest primitive that fits.</p>
+
+      <h2 class="section"><span class="id">13.2</span> Treat <code>.kiro/</code> as code</h2>
+      <p><code>.kiro/</code> files are <em>infrastructure</em>. Treat them accordingly:</p>
+      <ul>
+        <li><strong>Commit them.</strong> Steering, skills, agents, hooks, specs — all in the repo, reviewed in MRs.</li>
+        <li><strong>Lint them.</strong> Validate JSON configs, check YAML front-matter, ensure hook scripts are executable.</li>
+        <li><strong>Test them.</strong> When you change a hook, run kiro-cli with a known prompt and assert behavior.</li>
+        <li><strong>Version them.</strong> Pin kiro-cli versions in CI; upgrade deliberately; note breaking changes.</li>
+        <li><strong>Document them.</strong> A short <code>README.md</code> in <code>.kiro/</code> explaining what each piece does.</li>
+      </ul>
+      <p>The team that doesn't do this ends up with mystery configs no one can explain six months later.</p>
+
+      <h2 class="section"><span class="id">13.3</span> Failure modes in the wild</h2>
+      <table>
+        <thead><tr><th>Failure</th><th>Root cause</th><th>Antidote</th></tr></thead>
+        <tbody>
+          <tr><td>Agent does the wrong thing and you didn't catch it</td><td>Output not reviewed; auto-merge</td><td>Treat output as untrusted; review like any human MR</td></tr>
+          <tr><td><code>.kiro/</code> drift across team</td><td>No source of truth; private global configs</td><td>Workspace configs win; deprecate global where possible</td></tr>
+          <tr><td>One giant agent does everything</td><td>Reaching for the default agent for everything</td><td>Build scoped agents; switch via <code>/agent</code></td></tr>
+          <tr><td>Steering bloat slows every turn</td><td>Every team rule added to <code>always</code></td><td>Move to <code>fileMatch</code> or <code>manual</code> aggressively</td></tr>
+          <tr><td>Subagents do unexpected writes</td><td>Hook on parent doesn't fire on children</td><td>Lock down child configs; combine layers</td></tr>
+          <tr><td>Spec stages collapsed into one turn</td><td>Convenience over discipline</td><td>Enforce gates; review at each stage</td></tr>
+          <tr><td>Hallucinated APIs / config keys</td><td>No grounding; agent didn't read source</td><td>Steering rule: "verify by reading actual source before answering"</td></tr>
+          <tr><td>Cost explosions</td><td>Long sessions; no <code>/clear</code> habit</td><td>Session per task; periodic compact/clear</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="section"><span class="id">13.4</span> When NOT to use kiro-cli</h2>
+      <p>Honest list:</p>
+      <ul>
+        <li><strong>Deterministic refactors.</strong> A rename, a regex substitution, a codemod. Use a real refactor tool.</li>
+        <li><strong>Code that must be exactly reproducible.</strong> Generated migrations, build artefacts. The non-determinism bites.</li>
+        <li><strong>Hot-path performance work.</strong> The agent loop adds latency. Profile manually, edit manually.</li>
+        <li><strong>Greenfield architectural decisions.</strong> The agent has no taste. Decide first, implement second.</li>
+        <li><strong>Anywhere a wrong answer is catastrophic and undetectable.</strong> Money calculations without tests, security-critical crypto.</li>
+      </ul>
+      <p>Knowing where the tool doesn't fit makes you better at recognising where it does.</p>
+
+      <h2 class="section"><span class="id">13.5</span> LICENSE gotcha</h2>
+      <div class="callout" style="border-color: var(--border-amber);">
+        <div class="label">Important — LICENSE</div>
+        <p><strong>kiro-cli's LICENSE forbids use in conjunction with OpenClaw, NemoClaw, and similar reverse-engineered or Anthropic-API-fronting clients.</strong></p>
+      </div>
+      <p>This matters if your team uses (or experiments with) those tools. Concretely:</p>
+      <ul>
+        <li>Do not mix kiro-cli configs/skills with OpenClaw/NemoClaw setups</li>
+        <li>Do not pipe kiro-cli output into one of those clients, or vice versa</li>
+        <li>If a project uses both, separate the workflows entirely</li>
+      </ul>
+      <p>Audit your team's stack. If anyone is doing this, fix it before it becomes a procurement issue.</p>
+
+      <h2 class="section"><span class="id">13.6</span> Habits of effective teams</h2>
+      <p>Observed in teams that ship reliably with kiro-cli:</p>
+      <ul>
+        <li><strong>One scoped agent per risky workflow.</strong> Never use default for prod-adjacent work.</li>
+        <li><strong><code>AGENTS.md</code> under 100 lines.</strong> Anything more, move to <code>fileMatch</code>.</li>
+        <li><strong>A <code>code-reviewer</code> agent that runs in CI on every MR.</strong> Cheap, useful; agent-output is reviewed by humans regardless.</li>
+        <li><strong>Periodic <code>.kiro/</code> review.</strong> A 30-minute monthly grooming session pays back tenfold.</li>
+        <li><strong>Specs for anything beyond a 2-file change.</strong> Cheap discipline; massive savings.</li>
+        <li><strong>Templates for new agents and skills.</strong> Lowers the activation energy to do things properly.</li>
+      </ul>
+
+      <h2 class="section"><span class="id">13.7</span> Habits of struggling teams</h2>
+      <table>
+        <thead><tr><th>Anti-pattern</th><th>Why it hurts</th></tr></thead>
+        <tbody>
+          <tr><td>One person owns all <code>.kiro/</code> configs</td><td>Bus factor of one</td></tr>
+          <tr><td>Default agent for everything</td><td>No least-privilege; surprises happen</td></tr>
+          <tr><td>Skills with no description</td><td>Agent never proposes them; users forget they exist</td></tr>
+          <tr><td>Hooks that always exit 0</td><td>Silent failure mode</td></tr>
+          <tr><td>Specs treated as paperwork</td><td>Stages get rushed, defeating the point</td></tr>
+          <tr><td>No CI lint on <code>.kiro/</code> JSON</td><td>Broken configs reach prod-adjacent workflows</td></tr>
+          <tr><td>Treating agent output as authoritative</td><td>Skipped reviews; bugs ship</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="section"><span class="id">13.8</span> A 30-day adoption arc</h2>
+      <p>If you're rolling kiro-cli into a team, this sequence works:</p>
+      <table>
+        <thead><tr><th>Week</th><th>Goal</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Everyone installed; <code>AGENTS.md</code> written; one shared steering file</td></tr>
+          <tr><td>2</td><td>First skill (low-stakes — repo-audit or doc-update); team uses it</td></tr>
+          <tr><td>3</td><td>First custom agent (code-reviewer); wired into CI on MRs</td></tr>
+          <tr><td>4</td><td>First hook (block prod writes); first spec (next real feature)</td></tr>
+        </tbody>
+      </table>
+      <p>After 30 days you have the full stack in production use. Add subagents and orchestrators when the natural fan-out cases appear.</p>
+
+      <h2 class="section"><span class="id">▢</span> Check yourself</h2>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m13-q1"><span class="chevron">›</span> 1. <code>.kiro/</code> configs should live in everyone's home directory for personalisation.</button>
+        <div class="reveal-content" id="rev-m13-q1">
+          <p><strong>False.</strong> Workspace configs win for team consistency; global is for personal.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m13-q2"><span class="chevron">›</span> 2. The default agent is fine for production workflows if you trust the LLM.</button>
+        <div class="reveal-content" id="rev-m13-q2">
+          <p><strong>False.</strong> Trust is not a security model. Build scoped agents.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m13-q3"><span class="chevron">›</span> 3. I can use kiro-cli alongside OpenClaw.</button>
+        <div class="reveal-content" id="rev-m13-q3">
+          <p><strong>False.</strong> LICENSE forbids it.</p>
+        </div>
+      </div>
+      <div class="reveal">
+        <button class="reveal-toggle" data-target="rev-m13-q4"><span class="chevron">›</span> 4. Specs are only useful if every MR uses one.</button>
+        <div class="reveal-content" id="rev-m13-q4">
+          <p><strong>False.</strong> Use them when the size/risk justifies the overhead. Most MRs won't need one.</p>
+        </div>
+      </div>
+
+      <nav class="module-nav">
+        <a href="#module-12">
+          <div class="nav-label">— Previous</div>
+          <div class="nav-title">12 · Operating Surface</div>
+        </a>
+        <a class="next" href="#module-14">
+          <div class="nav-label">Next module —</div>
+          <div class="nav-title">14 · Hands-on Labs</div>
+        </a>
+      </nav>
+    </article>
+
+    <!-- ===================== MODULE 14 ===================== -->
+    <article class="module-content" id="module-14">
+      <div class="module-meta">
+        <span>Module 14</span>
+        <span class="dot">//</span>
+        <span class="accent">Part 3 — Patterns and Discipline</span>
+        <span class="dot">//</span>
+        <span>~90 min hands-on</span>
+      </div>
+      <div class="module-number">14</div>
+      <h1 class="module-title">Hands-on <span class="em">labs</span></h1>
+      <div class="module-lede">
+        Eight progressive labs. Each builds on the previous. Do them in order. By the end you'll have a working <code>.kiro/</code> directory exercising every primitive, plus a headless CI integration. Pick a small real repo of yours to work in — not a scratch project. The point is to build something you'll keep using.
+      </div>
+
+      <h2 class="section"><span class="id">▢</span> Setup</h2>
+      <p>Before starting, confirm:</p>
+<pre class="code-block">kiro-cli --version
+<span class="comment"># kiro-cli 18.8 or later</span>
+
+<span class="keyword">cd</span> ~/projects/your-real-repo
+git checkout -b kiro-bootstrap</pre>
+      <p>You'll be committing <code>.kiro/</code> files. Working on a branch keeps it safe.</p>
+
+      <h2 class="section"><span class="id">L1</span> Lab 1 — Bootstrap <code>.kiro/</code></h2>
+      <p><strong>Goal:</strong> Create the directory skeleton and the minimum-viable <code>AGENTS.md</code>.</p>
+      <p><strong>Steps:</strong></p>
+<pre class="code-block">mkdir -p .kiro/{steering,skills,agents,hooks,specs}
+
+cat &gt; AGENTS.md &lt;&lt;<span class="string">'EOF'</span>
+<span class="comment"># Agents instructions</span>
+
+<span class="comment">## Stack</span>
+- Python 3.12, FastAPI, SQLAlchemy
+- TypeScript / React (frontend, Vercel)
+- Terraform (IaC), AWS (Lambda, SQS, S3, RDS, Bedrock)
+- GitLab CI for everything
+
+<span class="comment">## Working style</span>
+For tasks touching more than 2 files: research → plan → implement.
+Stop after research. Stop after plan. Only then implement.
+
+<span class="comment">## Don'ts</span>
+- Never edit .env* files.
+- Never write under infra/prod/.
+- Never commit secrets.
+EOF
+
+cat &gt; .kiro/README.md &lt;&lt;<span class="string">'EOF'</span>
+<span class="comment"># .kiro/ — kiro-cli config</span>
+
+- steering/  — durable rules loaded into agent context
+- skills/    — invokable workflows (slash commands)
+- agents/    — scoped runtime configurations
+- hooks/     — bash that runs at lifecycle events
+- specs/     — multi-stage gated builds
+EOF</pre>
+      <p><strong>Verify:</strong></p>
+<pre class="code-block">kiro-cli /context
+<span class="comment"># Should show AGENTS.md as loaded.</span></pre>
+      <p><strong>What you learned:</strong> The directory layout and the role of <code>AGENTS.md</code> as the always-loaded steering file. <em>(Module 4.)</em></p>
+
+      <h2 class="section"><span class="id">L2</span> Lab 2 — Steering with <code>fileMatch</code></h2>
+      <p><strong>Goal:</strong> Add a conditional steering file that loads only when Terraform files are in context.</p>
+      <p><strong>Steps:</strong></p>
+      <p><code>.kiro/steering/terraform.md</code>:</p>
+<pre class="code-block"><span class="comment">---</span>
+<span class="keyword">inclusion</span><span class="symbol">:</span> fileMatch
+<span class="keyword">fileMatch</span><span class="symbol">:</span> <span class="string">"**/*.tf"</span>
+<span class="comment">---</span>
+
+<span class="comment"># Terraform conventions</span>
+
+- Module structure: every module has main.tf, variables.tf, outputs.tf, versions.tf
+- Pin provider versions in versions.tf
+- Use remote state (S3 + DynamoDB lock). Never local state.
+- Tag every resource with: Project, Environment, Owner, ManagedBy=terraform
+- For prod, require terraform plan output to be reviewed in MR</pre>
+      <p><strong>Verify:</strong></p>
+<pre class="code-block">kiro-cli
+&gt; <span class="string">Open infra/dev/main.tf</span>
+&gt; /context
+<span class="comment"># Steering "terraform.md" should now appear as loaded.</span></pre>
+      <p>Then in a different session without Terraform files in context, confirm it's NOT loaded.</p>
+      <p><strong>What you learned:</strong> The three inclusion modes and how <code>fileMatch</code> keeps steering targeted. <em>(Module 4.)</em></p>
+
+      <h2 class="section"><span class="id">L3</span> Lab 3 — A <code>security-review</code> skill</h2>
+      <p><strong>Goal:</strong> Create a skill that performs a focused security review on a given file or directory.</p>
+      <p><strong>Steps:</strong></p>
+      <p><code>.kiro/skills/security-review/SKILL.md</code>:</p>
+<pre class="code-block"><span class="comment">---</span>
+<span class="keyword">description</span><span class="symbol">:</span> <span class="string">Security-focused review of a file or directory. Looks for
+  secrets in code, unsafe deserialisation, SQL injection risk, IAM
+  over-permissions, and missing input validation. Use when adding or
+  reviewing any auth, payments, or user-input handling code.</span>
+<span class="comment">---</span>
+
+<span class="comment"># Security Review Skill</span>
+
+<span class="comment">## Steps</span>
+1. Read the target file(s) listed in the user's prompt.
+2. Check for:
+   - Hardcoded secrets, API keys, tokens
+   - SQL string concatenation with user input
+   - `pickle.loads`, `eval`, `exec` on untrusted data
+   - Subprocess calls with `shell=True` and user input
+   - IAM policies with `"*"` in Action or Resource
+   - Missing input validation on FastAPI endpoint parameters
+3. For each finding: file:line, severity (high/medium/low), description, suggested fix.
+4. End with a summary table of findings by severity.
+
+<span class="comment">## Output format</span>
+Markdown report with a findings table and per-finding detail.</pre>
+      <p><strong>Verify:</strong></p>
+<pre class="code-block">kiro-cli
+&gt; /security-review src/auth/
+<span class="comment"># Agent should run the skill workflow.</span></pre>
+      <p><strong>What you learned:</strong> Skills are slash-invocable workflows; the <code>description</code> is critical because it's how the model decides to surface the skill. <em>(Module 5.)</em></p>
+
+      <h2 class="section"><span class="id">L4</span> Lab 4 — A <code>code-reviewer</code> agent</h2>
+      <p><strong>Goal:</strong> Create a read-only agent specialised for code review.</p>
+      <p><strong>Steps:</strong></p>
+      <p><code>.kiro/agents/code-reviewer.json</code>:</p>
+<pre class="code-block"><span class="symbol">{</span>
+  <span class="string">"name"</span><span class="symbol">:</span> <span class="string">"code-reviewer"</span>,
+  <span class="string">"description"</span><span class="symbol">:</span> <span class="string">"Read-only code review against repo conventions"</span>,
+  <span class="string">"model"</span><span class="symbol">:</span> <span class="string">"claude-sonnet-4"</span>,
+  <span class="string">"prompt"</span><span class="symbol">:</span> <span class="string">"You are a senior code reviewer. Read the changed files, run
+            linters and tests, produce a markdown review with sections:
+            Summary, Findings (severity-ranked), Suggested changes.
+            Never modify files. Follow conventions in AGENTS.md."</span>,
+  <span class="string">"tools"</span><span class="symbol">:</span> <span class="symbol">[</span><span class="string">"fs_read"</span>, <span class="string">"execute_bash"</span><span class="symbol">]</span>,
+  <span class="string">"allowedTools"</span><span class="symbol">:</span> <span class="symbol">{</span>
+    <span class="string">"execute_bash"</span><span class="symbol">:</span> <span class="symbol">[</span><span class="string">"pytest *"</span>, <span class="string">"ruff check *"</span>, <span class="string">"mypy *"</span>, <span class="string">"git diff *"</span>, <span class="string">"git log *"</span><span class="symbol">]</span>
+  <span class="symbol">}</span>,
+  <span class="string">"resources"</span><span class="symbol">:</span> <span class="symbol">[</span>
+    <span class="string">"file://./AGENTS.md"</span>,
+    <span class="string">"file://./.kiro/steering/*.md"</span>
+  <span class="symbol">]</span>
+<span class="symbol">}</span></pre>
+      <p><strong>Verify:</strong></p>
+<pre class="code-block">kiro-cli --agent code-reviewer <span class="string">"Review the last commit on this branch"</span>
+<span class="comment"># Agent should read diff, run linters, produce markdown report.
+# Confirm it CANNOT write files — ask it to "save the review to
+# review.md" and confirm refusal.</span></pre>
+      <p><strong>What you learned:</strong> Agents as scoped runtimes. The tools whitelist is the boundary; the prompt is the persona. <em>(Module 6.)</em></p>
+
+      <h2 class="section"><span class="id">L5</span> Lab 5 — Subagent fan-out</h2>
+      <p><strong>Goal:</strong> Build an orchestrator that runs linting and tests in parallel via two scoped subagents.</p>
+      <p><strong>Steps:</strong></p>
+      <p><code>.kiro/agents/lint-checker.json</code>:</p>
+<pre class="code-block"><span class="symbol">{</span>
+  <span class="string">"name"</span><span class="symbol">:</span> <span class="string">"lint-checker"</span>,
+  <span class="string">"description"</span><span class="symbol">:</span> <span class="string">"Run ruff and mypy, report errors"</span>,
+  <span class="string">"model"</span><span class="symbol">:</span> <span class="string">"claude-haiku-4-5"</span>,
+  <span class="string">"prompt"</span><span class="symbol">:</span> <span class="string">"Run ruff and mypy on the project. Report errors with
+            file:line and the rule violated. Output markdown."</span>,
+  <span class="string">"tools"</span><span class="symbol">:</span> <span class="symbol">[</span><span class="string">"execute_bash"</span><span class="symbol">]</span>,
+  <span class="string">"allowedTools"</span><span class="symbol">:</span> <span class="symbol">{</span> <span class="string">"execute_bash"</span><span class="symbol">:</span> <span class="symbol">[</span><span class="string">"ruff check *"</span>, <span class="string">"mypy *"</span><span class="symbol">]</span> <span class="symbol">}</span>
+<span class="symbol">}</span></pre>
+      <p><code>.kiro/agents/test-runner.json</code>:</p>
+<pre class="code-block"><span class="symbol">{</span>
+  <span class="string">"name"</span><span class="symbol">:</span> <span class="string">"test-runner"</span>,
+  <span class="string">"description"</span><span class="symbol">:</span> <span class="string">"Run pytest, report failures"</span>,
+  <span class="string">"model"</span><span class="symbol">:</span> <span class="string">"claude-haiku-4-5"</span>,
+  <span class="string">"prompt"</span><span class="symbol">:</span> <span class="string">"Run pytest. Report failures with test name, file:line,
+            and first 3 lines of traceback."</span>,
+  <span class="string">"tools"</span><span class="symbol">:</span> <span class="symbol">[</span><span class="string">"execute_bash"</span><span class="symbol">]</span>,
+  <span class="string">"allowedTools"</span><span class="symbol">:</span> <span class="symbol">{</span> <span class="string">"execute_bash"</span><span class="symbol">:</span> <span class="symbol">[</span><span class="string">"pytest *"</span><span class="symbol">]</span> <span class="symbol">}</span>
+<span class="symbol">}</span></pre>
+      <p><code>.kiro/agents/check-orchestrator.json</code>:</p>
+<pre class="code-block"><span class="symbol">{</span>
+  <span class="string">"name"</span><span class="symbol">:</span> <span class="string">"check-orchestrator"</span>,
+  <span class="string">"description"</span><span class="symbol">:</span> <span class="string">"Run linting and tests in parallel, combine results"</span>,
+  <span class="string">"model"</span><span class="symbol">:</span> <span class="string">"claude-sonnet-4"</span>,
+  <span class="string">"prompt"</span><span class="symbol">:</span> <span class="string">"Spawn lint-checker and test-runner subagents in parallel.
+            Combine their outputs into one report. If either failed,
+            lead with the failures."</span>,
+  <span class="string">"tools"</span><span class="symbol">:</span> <span class="symbol">[</span><span class="string">"subagent"</span><span class="symbol">]</span>,
+  <span class="string">"availableAgents"</span><span class="symbol">:</span> <span class="symbol">[</span><span class="string">"lint-checker"</span>, <span class="string">"test-runner"</span><span class="symbol">]</span>,
+  <span class="string">"trustedAgents"</span><span class="symbol">:</span> <span class="symbol">[</span><span class="string">"lint-checker"</span>, <span class="string">"test-runner"</span><span class="symbol">]</span>
+<span class="symbol">}</span></pre>
+      <p><strong>Verify:</strong></p>
+<pre class="code-block">kiro-cli --agent check-orchestrator <span class="string">"Run all checks"</span>
+<span class="comment"># Press Ctrl+G to see subagents spawned in parallel.
+# Final output should be a combined report.</span></pre>
+      <p><strong>What you learned:</strong> Orchestrator pattern — parent has only <code>subagent</code>, children are scoped runners. Fan-out reduces wall-clock time. <em>(Module 7.)</em></p>
+
+      <h2 class="section"><span class="id">L6</span> Lab 6 — Hook to block prod writes</h2>
+      <p><strong>Goal:</strong> Mechanically block any <code>fs_write</code> to paths under <code>infra/prod/</code>.</p>
+      <p><strong>Steps:</strong></p>
+      <p><code>.kiro/hooks/pre-tool-use.sh</code>:</p>
+<pre class="code-block"><span class="comment">#!/usr/bin/env bash</span>
+<span class="keyword">set</span> -euo pipefail
+
+event=$(cat)
+tool=$(echo <span class="string">"$event"</span> | jq -r <span class="string">'.tool'</span>)
+path=$(echo <span class="string">"$event"</span> | jq -r <span class="string">'.input.path // empty'</span>)
+
+<span class="comment"># Block writes under infra/prod/</span>
+<span class="keyword">if</span> [[ <span class="string">"$tool"</span> == <span class="string">"fs_write"</span> &amp;&amp; <span class="string">"$path"</span> == infra/prod/* ]]; <span class="keyword">then</span>
+  echo <span class="string">'{"reason": "Direct writes to infra/prod/ are blocked. Use the prod-deploy spec."}'</span>
+  <span class="keyword">exit</span> 2
+<span class="keyword">fi</span>
+
+<span class="comment"># Block .env writes</span>
+<span class="keyword">if</span> [[ <span class="string">"$tool"</span> == <span class="string">"fs_write"</span> &amp;&amp; <span class="string">"$path"</span> == *.env* ]]; <span class="keyword">then</span>
+  echo <span class="string">'{"reason": ".env files contain secrets. Edit manually."}'</span>
+  <span class="keyword">exit</span> 2
+<span class="keyword">fi</span>
+
+<span class="keyword">exit</span> 0</pre>
+<pre class="code-block">chmod +x .kiro/hooks/pre-tool-use.sh</pre>
+      <p><strong>Verify:</strong></p>
+<pre class="code-block">kiro-cli
+&gt; <span class="string">Create infra/prod/test.tf with an empty resource block</span>
+<span class="comment"># Should be hard-blocked.</span>
+
+&gt; <span class="string">Create infra/dev/test.tf with an empty resource block</span>
+<span class="comment"># Should succeed.</span></pre>
+      <p><strong>What you learned:</strong> Hooks as the mechanical enforcement layer. Exit code 2 from <code>preToolUse</code> is the only way to actually block. <em>(Module 8.)</em></p>
+
+      <h2 class="section"><span class="id">L7</span> Lab 7 — A spec for a small feature</h2>
+      <p><strong>Goal:</strong> Walk a real (small) feature through requirements → design → tasks with human gates.</p>
+      <p><strong>Steps:</strong> Pick a small real feature in your backlog. If you don't have one, use: <em>"Add a <code>/health/db</code> endpoint that returns 200 if the database is reachable, 503 otherwise."</em></p>
+<pre class="code-block">kiro-cli
+&gt; <span class="string">Create a spec for: "Add a /health/db endpoint that returns 200 if
+   Postgres is reachable, 503 otherwise. Should be unauthenticated and
+   used by the load balancer."</span></pre>
+      <p>Walk all three stages:</p>
+      <ol>
+        <li>Agent produces <code>requirements.md</code> in EARS notation. <strong>Review. Edit. Approve.</strong></li>
+        <li>Agent produces <code>design.md</code> — endpoint location, query used (<code>SELECT 1</code>), timeout, error handling. <strong>Review. Push back on anything wrong. Approve.</strong></li>
+        <li>Agent produces <code>tasks.md</code> — atomic tasks. <strong>Review. Approve.</strong></li>
+      </ol>
+      <p>Then either implement the tasks yourself or let the agent implement them one at a time, running tests after each.</p>
+      <p><strong>Verify:</strong></p>
+<pre class="code-block">ls .kiro/specs/health-db-endpoint/
+<span class="comment"># requirements.md  design.md  tasks.md</span></pre>
+      <p>Open each file. Confirm the content is something you'd be comfortable showing a teammate as the design record for this feature.</p>
+      <p><strong>What you learned:</strong> Specs as gated builds. The cost of catching a bad design decision at the design gate is minutes; at implementation, hours. <em>(Module 9.)</em></p>
+
+      <h2 class="section"><span class="id">L8</span> Lab 8 — Headless kiro-cli in GitLab CI</h2>
+      <p><strong>Goal:</strong> Wire the <code>code-reviewer</code> agent from Lab 4 into a GitLab CI job that comments on every MR.</p>
+      <p><strong>Steps:</strong> Store <code>KIRO_API_KEY</code> as a CI/CD variable (masked, protected) in GitLab project settings.</p>
+      <p><code>.gitlab-ci.yml</code> (add this job):</p>
+<pre class="code-block"><span class="keyword">agent-review</span><span class="symbol">:</span>
+  <span class="keyword">stage</span><span class="symbol">:</span> test
+  <span class="keyword">image</span><span class="symbol">:</span> registry.gitlab.com/your-org/kiro-cli:18.8
+  <span class="keyword">tags</span><span class="symbol">:</span> [gitlab--duo]
+  <span class="keyword">rules</span><span class="symbol">:</span>
+    - <span class="keyword">if</span><span class="symbol">:</span> $CI_PIPELINE_SOURCE == <span class="string">"merge_request_event"</span>
+  <span class="keyword">variables</span><span class="symbol">:</span>
+    <span class="keyword">KIRO_API_KEY</span><span class="symbol">:</span> $KIRO_API_KEY
+    <span class="keyword">AWS_REGION</span><span class="symbol">:</span> us-east-1
+  <span class="keyword">script</span><span class="symbol">:</span>
+    - |
+      kiro-cli --no-interactive --agent code-reviewer \
+        <span class="string">"Review the diff between $CI_MERGE_REQUEST_DIFF_BASE_SHA and HEAD.
+         Focus on the Findings section. Output strict markdown to stdout."</span> \
+        > review.md
+    - |
+      <span class="comment"># Post review as MR comment</span>
+      curl --request POST \
+        --header <span class="string">"PRIVATE-TOKEN: $GITLAB_TOKEN"</span> \
+        --form <span class="string">"body=&lt;review.md"</span> \
+        <span class="string">"$CI_API_V4_URL/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID/notes"</span>
+  <span class="keyword">artifacts</span><span class="symbol">:</span>
+    <span class="keyword">paths</span><span class="symbol">:</span> [review.md]
+    <span class="keyword">when</span><span class="symbol">:</span> always</pre>
+      <p><strong>Verify:</strong></p>
+      <ol>
+        <li>Open a small MR on your branch</li>
+        <li>Watch the <code>agent-review</code> job run</li>
+        <li>Confirm <code>review.md</code> is uploaded as an artifact</li>
+        <li>Confirm a review comment appears on the MR</li>
+      </ol>
+      <p><strong>What you learned:</strong> Headless mode + agent config + CI = automated review on every MR. The same <code>code-reviewer.json</code> runs locally and in CI, with the same conventions. <em>(Module 12.)</em></p>
+
+      <h2 class="section"><span class="id">▢</span> You're done</h2>
+      <p>You now have a working <code>.kiro/</code> directory exercising every primitive:</p>
+      <ul>
+        <li><strong>Steering</strong> — <code>AGENTS.md</code> + <code>.kiro/steering/terraform.md</code></li>
+        <li><strong>Skills</strong> — <code>.kiro/skills/security-review/</code></li>
+        <li><strong>Agents</strong> — <code>code-reviewer</code>, <code>lint-checker</code>, <code>test-runner</code>, <code>check-orchestrator</code></li>
+        <li><strong>Subagent orchestration</strong> — <code>check-orchestrator</code> fans out</li>
+        <li><strong>Hooks</strong> — <code>.kiro/hooks/pre-tool-use.sh</code> blocks prod and <code>.env</code> writes</li>
+        <li><strong>Specs</strong> — <code>.kiro/specs/health-db-endpoint/</code></li>
+        <li><strong>Headless CI</strong> — <code>agent-review</code> job in <code>.gitlab-ci.yml</code></li>
+      </ul>
+      <p>Commit it. Review the MR with a teammate. Then start using it daily. That's how the muscle memory forms.</p>
+
+      <div class="callout" style="margin-top: 48px; border-color: var(--border-amber);">
+        <div class="label">Course complete — fin</div>
+        <p>If you started Module 1 not sure what an LLM actually is, and you finish Lab 8 with a working CI integration, you've covered the full arc: <strong>theory → primitives → patterns → working system.</strong></p>
+        <p>The mantra one more time, because it's the through-line for everything:</p>
+        <div class="pullquote" style="margin: 16px 0;">
+          Describe with steering. Restrict with agents. Encode know-how in skills.
+        </div>
+        <p>Everything else — subagents, hooks, specs, the operating surface, context discipline — supports those three sentences. Refer back to whichever module needs refreshing as you adopt kiro-cli in real work.</p>
+        <p><strong>Good luck. Ship things.</strong></p>
+      </div>
+
+      <nav class="module-nav">
+        <a href="#module-13">
+          <div class="nav-label">— Previous</div>
+          <div class="nav-title">13 · Best Practices</div>
+        </a>
+        <a class="next disabled">
+          <div class="nav-label">End of course —</div>
+          <div class="nav-title">fin</div>
+        </a>
+      </nav>
+    </article>
+
+  </main>
+</div>
+
+<script>
+  // ----- Hash-based module routing -----
+  const modules = ['module-1', 'module-2', 'module-3', 'module-4', 'module-5', 'module-6', 'module-7', 'module-8', 'module-9', 'module-10', 'module-11', 'module-12', 'module-13', 'module-14'];
+  const defaultModule = 'module-1';
+
+  function showModule(id) {
+    if (!modules.includes(id)) id = defaultModule;
+    document.querySelectorAll('.module-content').forEach(el => {
+      el.classList.toggle('active', el.id === id);
+    });
+    document.querySelectorAll('.sidebar .module-link').forEach(el => {
+      const target = el.getAttribute('data-module');
+      el.classList.toggle('active', target && ('module-' + target) === id);
+    });
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    document.getElementById('scrollProgress').style.width = '0%';
+  }
+
+  function moduleFromHash() {
+    const h = window.location.hash.replace('#', '');
+    return modules.includes(h) ? h : defaultModule;
+  }
+
+  showModule(moduleFromHash());
+  window.addEventListener('hashchange', () => showModule(moduleFromHash()));
+
+  // ----- Scroll progress -----
+  const progress = document.getElementById('scrollProgress');
+  window.addEventListener('scroll', () => {
+    const scrolled = window.scrollY;
+    const total = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = total > 0 ? (scrolled / total) * 100 : 0;
+    progress.style.width = pct + '%';
+  });
+
+  // ----- Sidebar toggle (mobile) -----
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const toggle = document.getElementById('menuToggle');
+  toggle.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('open');
+  });
+  overlay.addEventListener('click', () => {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('open');
+  });
+
+  // ----- Reveal toggles -----
+  document.querySelectorAll('.reveal-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.getAttribute('data-target');
+      const content = document.getElementById(targetId);
+      btn.classList.toggle('open');
+      content.classList.toggle('open');
+    });
+  });
+
+  // ----- Close mobile sidebar on link tap -----
+  document.querySelectorAll('.sidebar .module-link:not(.locked)').forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth <= 900) {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('open');
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
