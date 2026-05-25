@@ -8,7 +8,7 @@ credentials anywhere.
 ## AWS
 
 Trust policy on the IAM role (one-time setup, in IaC — see
-`templates/aws-trust-policy.json`):
+`assets/aws-trust-policy.json`):
 
 ```json
 {
@@ -40,7 +40,7 @@ The `sub` claim is the important condition. The common shapes are:
   `environment.name` is `production`. This is the cleanest pattern for
   multi-environment trust.
 
-Reusable template job (also see `templates/aws-oidc.yml`):
+Reusable template job (also see `assets/aws-oidc.yml`):
 
 ```yaml
 .aws-auth:

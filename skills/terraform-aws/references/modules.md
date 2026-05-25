@@ -6,7 +6,7 @@ A module is a unit of reuse. Three rules for when to make one:
 2. **Represents a logical unit.** A VPC, an ECS service, an EKS cluster, a "standard S3 bucket" with all the security controls. These are real abstractions worth a module even on first use.
 3. **NOT a trivial wrapper.** A module that takes the same inputs as `aws_s3_bucket` and just passes them through is a tax, not an abstraction.
 
-A complete module skeleton lives in `templates/module-skeleton/`.
+A complete module skeleton lives in `assets/module-skeleton/`.
 
 ## Inputs
 

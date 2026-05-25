@@ -78,18 +78,18 @@ live/
       ...
 ```
 
-Working examples for every level live in `templates/live/`.
+Working examples for every level live in `assets/live/`.
 
 ## Templates
 
 | Path                                                | Purpose                                                           |
 | --------------------------------------------------- | ----------------------------------------------------------------- |
-| `templates/live/terragrunt.hcl`                     | Root config — `remote_state`, generated provider with assume_role, `default_tags`, `extra_arguments`, common inputs |
-| `templates/live/_envcommon/vpc.hcl`                 | Shared VPC defaults included by per-environment children          |
-| `templates/live/prod/account.hcl`                   | Account-scoped vars (`account_id`, `account_name`, `exec_role`)   |
-| `templates/live/prod/us-east-1/region.hcl`          | Region-scoped vars (`aws_region`, `azs`)                          |
-| `templates/live/prod/us-east-1/vpc/terragrunt.hcl`  | Child unit including root + `_envcommon/vpc.hcl`, with overrides  |
-| `templates/.gitlab-ci-terragrunt.yml`               | GitLab CI fragment: `validate` / `plan` / `apply` with OIDC and per-environment resource groups |
+| `assets/live/terragrunt.hcl`                     | Root config — `remote_state`, generated provider with assume_role, `default_tags`, `extra_arguments`, common inputs |
+| `assets/live/_envcommon/vpc.hcl`                 | Shared VPC defaults included by per-environment children          |
+| `assets/live/prod/account.hcl`                   | Account-scoped vars (`account_id`, `account_name`, `exec_role`)   |
+| `assets/live/prod/us-east-1/region.hcl`          | Region-scoped vars (`aws_region`, `azs`)                          |
+| `assets/live/prod/us-east-1/vpc/terragrunt.hcl`  | Child unit including root + `_envcommon/vpc.hcl`, with overrides  |
+| `assets/.gitlab-ci-terragrunt.yml`               | GitLab CI fragment: `validate` / `plan` / `apply` with OIDC and per-environment resource groups |
 
 ## Bootstrap
 
@@ -99,7 +99,7 @@ landing-zone setup time using an SSO admin profile for the target account.
 
 ## CI Integration
 
-`templates/.gitlab-ci-terragrunt.yml` shows the full job shape:
+`assets/.gitlab-ci-terragrunt.yml` shows the full job shape:
 
 - OIDC authentication into `TerraformDeploymentRole` in the deployment
   account.

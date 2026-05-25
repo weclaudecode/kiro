@@ -259,7 +259,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "data" {
 }
 ```
 
-If only one of these is missing, the bucket is non-compliant. This is a strong argument for wrapping the whole set in a `secure_bucket` module — see `templates/module-skeleton/`.
+If only one of these is missing, the bucket is non-compliant. This is a strong argument for wrapping the whole set in a `secure_bucket` module — see `assets/module-skeleton/`.
 
 ## EKS, RDS, ECS
 

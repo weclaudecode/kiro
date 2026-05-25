@@ -48,7 +48,7 @@ COPY app.py ${LAMBDA_TASK_ROOT}
 CMD ["app.handler"]
 ```
 
-A ready-to-use multi-stage `Dockerfile` is provided in `templates/Dockerfile`.
+A ready-to-use multi-stage `Dockerfile` is provided in `assets/Dockerfile`.
 
 Build, push to ECR, and configure the function to use the image URI. Use container images when:
 

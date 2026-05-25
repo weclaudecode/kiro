@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# pre-push — heavier review + security scan before changes leave the box.
+# The natural home for expensive checks: slower (~30-90s) but only fires on push.
+# Blocks on any critical/BLOCK finding.
+# Override: KIRO_SKIP=1 git push ...   (or git push --no-verify)
+set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$HERE/_lib.sh"
+
+kiro_skip && exit 0
+kiro_ready || exit 0
+
+# Diff against the tracked upstream, falling back to origin/main.
+UPSTREAM="$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || echo origin/main)"
+DIFF="$(git diff "$UPSTREAM"...HEAD 2>/dev/null || true)"
+[ -z "$DIFF" ] && exit 0
+
+REPORT="$KIRO_TMP/kiro-prepush.md"
+printf '%s' "$DIFF" | kiro-cli chat --no-interactive \
+  --agent security-auditor \
+  --trust-tools "$KIRO_TRUST" \
+  --require-mcp-startup \
+  "Scan diff for: secrets, IAM over-permissioning, unsafe SQL, missing input validation, dependency CVEs. Block on any critical." \
+  | tee "$REPORT"
+
+if grep -Eqi 'BLOCK|critical' "$REPORT"; then
+  echo "[kiro-hook] security scan flagged a blocker — push halted. See $REPORT. Override: KIRO_SKIP=1 git push ..." >&2
+  exit 1
+fi
+exit 0

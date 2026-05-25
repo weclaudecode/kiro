@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# pre-commit — local review before staged changes leave disk.
+# Blocks the commit on any critical finding.
+# Override: KIRO_SKIP=1 git commit ...   (or git commit --no-verify)
+#
+# Trade-off: adds ~10-30s per commit. For WIP commits, skip with KIRO_SKIP=1,
+# or move the heavy review to pre-push (see ./pre-push).
+set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$HERE/_lib.sh"
+
+kiro_skip && exit 0
+kiro_ready || exit 0
+
+DIFF="$(git diff --cached)"
+[ -z "$DIFF" ] && exit 0
+
+REVIEW="$(printf '%s' "$DIFF" | kiro-cli chat --no-interactive \
+  --agent mr-reviewer \
+  --trust-tools "$KIRO_TRUST" \
+  "Review staged diff per .kiro/steering/. Output JSONL: {severity, file, line, issue}. Only critical/high.")"
+
+printf '%s\n' "$REVIEW"
+
+if printf '%s' "$REVIEW" | grep -Eq '"severity"[[:space:]]*:[[:space:]]*"critical"'; then
+  echo "[kiro-hook] critical issue — commit blocked. Override: KIRO_SKIP=1 git commit ..." >&2
+  exit 1
+fi
+exit 0

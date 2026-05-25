@@ -36,10 +36,10 @@ For deployment pipelines that build and ship these artifacts, see `gitlab-pipeli
 
 | File | Use when |
 | --- | --- |
-| `templates/handler.py` | Starting a new handler — Powertools Logger/Tracer/Metrics, `event_parser` with a Pydantic model, `idempotency` decorator, structured response. |
-| `templates/test_handler.py` | Setting up pytest — `make_context()` factory, sample event fixtures, `moto` DynamoDB fixture, golden-path and timeout tests. |
-| `templates/Dockerfile` | Packaging as a container image from `public.ecr.aws/lambda/python:3.12`, multi-stage to keep the runtime layer lean. |
-| `templates/pyproject.toml` | New project skeleton — Powertools, Pydantic, boto3, dev tooling (pytest, moto, mypy, ruff). |
+| `assets/handler.py` | Starting a new handler — Powertools Logger/Tracer/Metrics, `event_parser` with a Pydantic model, `idempotency` decorator, structured response. |
+| `assets/test_handler.py` | Setting up pytest — `make_context()` factory, sample event fixtures, `moto` DynamoDB fixture, golden-path and timeout tests. |
+| `assets/Dockerfile` | Packaging as a container image from `public.ecr.aws/lambda/python:3.12`, multi-stage to keep the runtime layer lean. |
+| `assets/pyproject.toml` | New project skeleton — Powertools, Pydantic, boto3, dev tooling (pytest, moto, mypy, ruff). |
 | `scripts/build_zip.sh` | Building a zip artifact for Linux from any host OS, parameterized by arch and Python version. |
 
 ## References

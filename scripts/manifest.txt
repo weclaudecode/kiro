@@ -18,6 +18,10 @@ file|agents/python-lambda-author.json|agents/python-lambda-author.json
 file|agents/gitlab-ci-engineer.json|agents/gitlab-ci-engineer.json
 file|agents/aws-architect.json|agents/aws-architect.json
 file|agents/security-auditor.json|agents/security-auditor.json
+file|agents/mr-reviewer.json|agents/mr-reviewer.json
+file|agents/doc-updater.json|agents/doc-updater.json
+file|agents/pipeline-troubleshooter.json|agents/pipeline-troubleshooter.json
+file|agents/steering-curator.json|agents/steering-curator.json
 
 file|prompts/new-lambda.md|prompts/new-lambda.md
 file|prompts/new-terraform-module.md|prompts/new-terraform-module.md
@@ -31,6 +35,7 @@ file|hooks/pre-commit-py-lint.kiro.hook|hooks/pre-commit-py-lint.kiro.hook
 file|mcp/mcp.sample.json|settings/mcp.json
 file|settings/cli.sample.json|settings/cli.json
 
+dir|skills/automation-solutions|skills/automation-solutions
 dir|skills/aws-solution-architect|skills/aws-solution-architect
 dir|skills/gitlab-pipeline|skills/gitlab-pipeline
 dir|skills/python-devops-aws|skills/python-devops-aws
@@ -39,3 +44,4 @@ dir|skills/security-code-reviewer|skills/security-code-reviewer
 dir|skills/steampipe|skills/steampipe
 dir|skills/terraform-aws|skills/terraform-aws
 dir|skills/terragrunt-multi-account|skills/terragrunt-multi-account
+dir|skills/skill-creator|skills/skill-creator

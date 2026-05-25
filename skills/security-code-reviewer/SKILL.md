@@ -38,7 +38,7 @@ is documentation- or test-only with no production code path.
 ## Methodology
 
 The review proceeds in five phases. The reviewer ticks through
-`templates/review-checklist.md` while doing this.
+`assets/review-checklist.md` while doing this.
 
 1. **Scope** — write a two-line threat model: public or internal, PII or
    payments, multi-tenant, language and runtime, in-scope artifacts (diff vs.
@@ -55,8 +55,8 @@ The review proceeds in five phases. The reviewer ticks through
    `references/iac-and-containers.md`, `references/cicd-review.md`,
    `references/dependency-review.md`.
 5. **Write findings** — one finding per issue using
-   `templates/finding-report.md`, severity assigned via
-   `templates/severity-rubric.md`. Group only when findings share a single
+   `assets/finding-report.md`, severity assigned via
+   `assets/severity-rubric.md`. Group only when findings share a single
    root cause and a single fix.
 
 ## Findings Report — Required Fields
@@ -66,7 +66,7 @@ Every finding must include:
 - **Title** — short, specific (e.g. "SQL injection in
   `OrderRepository.findByUser`", not "SQL issue").
 - **Severity** — Critical / High / Medium / Low / Informational, assigned
-  using `templates/severity-rubric.md`.
+  using `assets/severity-rubric.md`.
 - **CWE/OWASP reference** — e.g. `CWE-89 (SQL Injection)`,
   `OWASP A03:2021`.
 - **Location** — `path/to/file.py:42-48`, with the actual vulnerable code as
@@ -82,15 +82,15 @@ Every finding must include:
   cheat sheet.
 
 The full layout, with placeholders and a worked example, is in
-`templates/finding-report.md`.
+`assets/finding-report.md`.
 
 ## Templates
 
 | Template | Purpose |
 | --- | --- |
-| `templates/finding-report.md` | Layout for a single finding, with placeholders and a worked example |
-| `templates/severity-rubric.md` | One-page rubric: criteria for Critical / High / Medium / Low / Informational |
-| `templates/review-checklist.md` | ~50-item checklist organized by phase 1-5 for the reviewer to tick through |
+| `assets/finding-report.md` | Layout for a single finding, with placeholders and a worked example |
+| `assets/severity-rubric.md` | One-page rubric: criteria for Critical / High / Medium / Low / Informational |
+| `assets/review-checklist.md` | ~50-item checklist organized by phase 1-5 for the reviewer to tick through |
 
 ## References
 

@@ -2,7 +2,7 @@
 
 The root is the single place that defines backend and provider behaviour for
 every unit beneath it. A representative production version lives at
-`templates/live/terragrunt.hcl`; the structure is described below.
+`assets/live/terragrunt.hcl`; the structure is described below.
 
 ## Structure
 
@@ -90,7 +90,7 @@ inputs = merge(
   applies them automatically to every taggable resource.
 - **`terraform.extra_arguments`** is the right place for `-lock-timeout`, for
   loading well-known `*.tfvars` files, and for forcing `-input=false` in CI.
-  See `templates/live/terragrunt.hcl` for the full block.
+  See `assets/live/terragrunt.hcl` for the full block.
 
 ## Minimal supporting files
 
@@ -162,4 +162,4 @@ Notes:
   `generate` block in the child rather than hand-writing one.
 - **Shared per-stack defaults** belong in `_envcommon/<unit>.hcl` and are
   pulled in with a second `include` block. See
-  `templates/live/_envcommon/vpc.hcl`.
+  `assets/live/_envcommon/vpc.hcl`.
