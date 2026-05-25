@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# commit-msg — validate the final message is a conventional commit.
+# This is the gate; generation lives in ./prepare-commit-msg. Pure local check,
+# no API call, so it costs nothing and runs on every commit.
+# Override: KIRO_SKIP=1 git commit ...   (or git commit --no-verify)
+set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$HERE/_lib.sh"
+
+kiro_skip && exit 0
+
+MSG_FILE="$1"
+SUBJECT="$(head -n1 "$MSG_FILE")"
+
+# Merge/revert/fixup/squash subjects are exempt.
+case "$SUBJECT" in
+  Merge*|Revert*|fixup!*|squash!*|amend!*) exit 0 ;;
+esac
+
+CC_RE='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9/_.-]+\))?!?: .+'
+if [[ "$SUBJECT" =~ $CC_RE ]]; then
+  exit 0
+fi
+
+{
+  echo "[kiro-hook] commit subject is not a conventional commit:"
+  echo "    $SUBJECT"
+  echo "  expected: <type>(<scope>): <subject>"
+  echo "  example:  fix(lambda): handle empty SQS batch"
+  echo "  override: KIRO_SKIP=1 git commit ..."
+} >&2
+exit 1

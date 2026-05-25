@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# post-commit — async doc-sync proposals from the commit diff.
+# Forks into the background so it never slows the commit. Proposes patches only;
+# never applies them — that's what keeps the review value. The proposed diffs go
+# to $KIRO_TMP/doc-patches-<sha>.patch; review with `git apply --check` before use.
+# Skip: KIRO_SKIP=1 git commit ...
+set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$HERE/_lib.sh"
+
+kiro_skip && exit 0
+kiro_ready || exit 0
+
+(
+  SHA="$(git rev-parse HEAD)"
+  PATCH="$KIRO_TMP/doc-patches-$SHA.patch"
+  git show --stat "$SHA" | kiro-cli chat --no-interactive \
+    --agent doc-updater \
+    --trust-tools "$KIRO_TRUST" \
+    "Diff for commit $SHA. Identify docs needing updates (AGENTS.md, README.md, docs/**). Output the proposed changes as unified diffs only — do not apply them." \
+    > "$PATCH"
+) > "$KIRO_TMP/kiro-postcommit.log" 2>&1 &
+
+exit 0

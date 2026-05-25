@@ -14,6 +14,14 @@ This README is the index: what each skill does and when to reach for it. For the
 
 ---
 
+## automation-solutions
+
+**What it does.** Playbook for running kiro-cli headlessly — git hooks (pre-commit review, commit-message draft/validate, post-commit doc sync, pre-push security scan) and scheduled jobs (nightly pipeline triage, dependency CVE scan, weekly steering refresh). Ships runnable scripts, a `.githooks/` installer, and the read-only agents each workflow invokes. Every invocation is read-only; anything that would change a file is proposed as a unified diff.
+
+**When to use.** Wiring kiro into git hooks or cron/systemd timers, deciding where an expensive check should live (pre-commit vs. pre-push vs. cron), or hardening/debugging existing kiro automation (fail-open, skip switches, cost, key handling).
+
+---
+
 ## aws-solution-architect
 
 **What it does.** Guides AWS architecture decisions — service selection, multi-account strategy, sizing for scale and cost, network topology, security/identity, resilience patterns, and Architecture Decision Records — framed around the Well-Architected Framework pillars.
@@ -86,6 +94,7 @@ Several skills assume context from others. Common chains:
 - `steampipe` → `terragrunt-multi-account` (audit-role layout) → `aws-solution-architect` (topology)
 - `security-code-reviewer` ← `steampipe` (findings feed in)
 - `terragrunt-multi-account` → `terraform-aws` (module / HCL primitives) → `aws-solution-architect` (service selection)
+- `automation-solutions` → `security-code-reviewer` (the agents it runs in hooks) + `gitlab-pipeline` (pipeline-troubleshooter context)
 
 ## Adding a new skill
 

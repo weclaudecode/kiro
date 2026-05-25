@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# prepare-commit-msg — draft a conventional-commit message from the staged diff.
+# The draft is prepended above whatever git already put in the file; you edit it
+# in your editor. Your own -m / -F message always wins (the hook no-ops then).
+# Skip entirely: KIRO_SKIP=1 git commit ...
+#
+# Trade-off: every interactive commit pays the latency. Some teams prefer to
+# validate the message instead of generating it — see ./commit-msg.
+set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$HERE/_lib.sh"
+
+MSG_FILE="$1"
+SOURCE="${2:-}"
+
+# Don't draft when a message already exists (-m/-F), or for merge/squash/amend.
+case "$SOURCE" in
+  message|merge|squash|commit) exit 0 ;;
+esac
+
+kiro_skip && exit 0
+kiro_ready || exit 0
+
+DIFF="$(git diff --cached)"
+[ -z "$DIFF" ] && exit 0
+
+DRAFT="$(printf '%s' "$DIFF" | kiro-cli chat --no-interactive \
+  --trust-tools read \
+  "Generate one conventional commit message: type(scope): subject, plus a body if the change warrants it. Output only the message — no preamble, no code fences.")"
+
+[ -z "$DRAFT" ] && exit 0
+printf '%s\n\n%s\n' "$DRAFT" "$(cat "$MSG_FILE")" > "$MSG_FILE"
+exit 0
