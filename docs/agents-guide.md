@@ -85,6 +85,10 @@ hooks/MCP wiring.
   before run.
 - **Architect / advisor:** `tools = ["read", "@mcp"]`. No edits. MCP
   enabled for queries (Steampipe, AWS API, etc.).
+- **Active investigator:** `tools = ["read", "shell", "@git"]`,
+  `allowedTools = ["read", "@git"]`. Pulls its own evidence from a CLI
+  but never mutates — `shell` stays out of `allowedTools` so every
+  command prompts. See `gitlab-ci-troubleshooter` (drives `glab`).
 
 ## Tips
 
