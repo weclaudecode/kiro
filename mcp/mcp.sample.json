@@ -41,6 +41,32 @@
       "disabled": false,
       "autoApprove": [],
       "timeout": 60000
+    },
+    "aws-pricing": {
+      "_doc": "AWS list/unit pricing for cost ESTIMATES. All pricing API calls are FREE. Read-only.",
+      "command": "uvx",
+      "args": ["awslabs.aws-pricing-mcp-server@latest"],
+      "env": {
+        "AWS_REGION": "${AWS_REGION}",
+        "AWS_PROFILE": "${AWS_PROFILE}",
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": ["get_pricing", "get_pricing_service_codes", "get_pricing_service_attributes", "get_pricing_attribute_values", "generate_cost_report"],
+      "timeout": 60000
+    },
+    "cost-explorer": {
+      "_doc": "ACTUAL AWS spend via Cost Explorer. WARNING: each Cost Explorer API request bills $0.01. Read-only but PAID. Ships disabled — set disabled:false to opt in. Keep autoApprove EMPTY so every billable call prompts.",
+      "command": "uvx",
+      "args": ["awslabs.cost-explorer-mcp-server@latest"],
+      "env": {
+        "AWS_REGION": "${AWS_REGION}",
+        "AWS_PROFILE": "${AWS_PROFILE}",
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": true,
+      "autoApprove": [],
+      "timeout": 120000
     }
   }
 }
