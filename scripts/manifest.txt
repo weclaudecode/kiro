@@ -16,6 +16,7 @@ file|steering/gitlab-ci-conventions.md|steering/gitlab-ci-conventions.md
 file|agents/terraform-reviewer.json|agents/terraform-reviewer.json
 file|agents/python-lambda-author.json|agents/python-lambda-author.json
 file|agents/gitlab-ci-engineer.json|agents/gitlab-ci-engineer.json
+file|agents/gitlab-ci-troubleshooter.json|agents/gitlab-ci-troubleshooter.json
 file|agents/aws-architect.json|agents/aws-architect.json
 file|agents/security-auditor.json|agents/security-auditor.json
 file|agents/mr-reviewer.json|agents/mr-reviewer.json
