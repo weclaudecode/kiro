@@ -78,4 +78,3 @@ The strongest report combines both: Powerpipe lists the *idle* resources
 (unattached EBS, idle EIPs, old snapshots) and pricing turns each into a
 **$/month wasted** figure — a concrete savings number per environment. The
 `aws-cost-analyst` agent is set up to do exactly this.
-</content>

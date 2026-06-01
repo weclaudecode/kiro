@@ -4,7 +4,7 @@
 # dashboard finds cost *waste* (idle/orphaned resources) from the AWS API.
 # For actual dollar spend per environment, use the Cost Explorer MCP server
 # (get_cost_and_usage grouped by the `Environment` tag) — see the
-# `cost-reporting` reference and `finops-cost-reporting` steering. Cost
+# `cost-reporting` reference and `powerpipe-reporting` steering. Cost
 # Explorer bills $0.01 per call; this dashboard is free (resource APIs).
 #
 #   powerpipe dashboard run acme_aws_reporting.dashboard.cost_by_environment \
@@ -22,7 +22,7 @@ dashboard "cost_by_environment" {
       title = "Unattached EBS volumes"
       width = 4
       type  = "alert"
-      sql   = "select count(*) as value from aws_ebs_volume where state = 'available';"
+      sql   = "select count(*) as value from aws_ec2_volume where state = 'available';"
     }
     card {
       title = "Idle Elastic IPs"
@@ -52,7 +52,7 @@ dashboard "cost_by_environment" {
           region,
           account_id,
           create_time
-        from aws_ebs_volume
+        from aws_ec2_volume
         where state = 'available'
         order by size desc;
       EOQ
@@ -77,7 +77,7 @@ dashboard "cost_by_environment" {
       type  = "column"
       sql   = <<-EOQ
         select volume_type, sum(size) as gib
-        from aws_ebs_volume
+        from aws_ec2_volume
         group by volume_type
         order by gib desc;
       EOQ

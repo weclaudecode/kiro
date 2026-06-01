@@ -57,4 +57,3 @@ CRIT=$(jq '[.. | objects
 
 Gate **prod** hard; keep dev/staging report-only so a noisy lower
 environment doesn't block delivery.
-</content>

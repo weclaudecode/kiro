@@ -73,7 +73,7 @@ control "iam_users_have_mfa" {
       name || case when mfa_enabled then ' has MFA' else ' has NO MFA' end as reason,
       account_id
     from aws_iam_user
-    where login_profile is not null;
+    where password_enabled;
   EOQ
   tags = { service = "IAM" }
 }

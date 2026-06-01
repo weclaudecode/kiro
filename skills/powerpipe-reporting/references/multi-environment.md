@@ -80,4 +80,3 @@ comm -23 \
 Resource APIs show *waste* (idle/orphaned), not dollars. For billed spend
 per environment, tag every resource with `Environment` and group Cost
 Explorer by that tag — see `cost-reporting.md`.
-</content>

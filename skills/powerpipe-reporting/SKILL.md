@@ -123,7 +123,7 @@ resource view with real billing data:
 | `cost-explorer` (`awslabs.cost-explorer-mcp-server`) | *Actual spend* — `get_cost_and_usage`, `…_comparisons`, `get_cost_forecast`, per-`Environment`-tag breakdown | **$0.01 per Cost Explorer API call** | `disabled: true` — opt in deliberately |
 
 Discipline (see `references/cost-reporting.md` and the
-`finops-cost-reporting` steering):
+`powerpipe-reporting` steering):
 - Cost Explorer bills per call. Pin a date range, group by the
   `Environment` tag, and prefer **monthly** granularity. Don't loop it
   per-account in a wide fan-out without intent.
@@ -192,4 +192,3 @@ powerpipe dashboard run <mod>.dashboard.<name> \
 | `powerpipe server` | Serve dashboards interactively on :9033 |
 | `powerpipe benchmark run` | Run a benchmark, emit to stdout in `--output` fmt |
 | `powerpipe dashboard run` | Run one dashboard, emit a snapshot/HTML |
-</content>

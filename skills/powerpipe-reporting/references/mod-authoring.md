@@ -79,4 +79,3 @@ query "old_snapshots" {
   args = [param.max_age_days]
 }
 ```
-</content>

@@ -31,12 +31,12 @@ dashboard "account_overview" {
       title = "IAM users without MFA"
       width = 3
       type  = "alert"
-      sql   = "select count(*) as value from aws_iam_user where login_profile is not null and not mfa_enabled;"
+      sql   = "select count(*) as value from aws_iam_user where password_enabled and not mfa_enabled;"
     }
     card {
       title = "Unattached EBS volumes"
       width = 3
-      sql   = "select count(*) as value from aws_ebs_volume where state = 'available';"
+      sql   = "select count(*) as value from aws_ec2_volume where state = 'available';"
     }
   }
 
@@ -77,7 +77,7 @@ dashboard "account_overview" {
         union all
         select
           'IAM no MFA', name, account_id, null
-        from aws_iam_user where login_profile is not null and not mfa_enabled
+        from aws_iam_user where password_enabled and not mfa_enabled
         order by check;
       EOQ
     }

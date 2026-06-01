@@ -52,7 +52,7 @@ First column is the category/label, subsequent numeric columns are series.
 ```hcl
 table {
   title = "Unattached EBS volumes"
-  sql   = "select volume_id, size, region, create_time from aws_ebs_volume where state = 'available' order by size desc;"
+  sql   = "select volume_id, size, region, create_time from aws_ec2_volume where state = 'available' order by size desc;"
   column "volume_id" { display = "all" }
   column "size"      { display = "all" }
 }
@@ -89,4 +89,3 @@ chart {
   → a single static HTML artifact.
 - `--output pps` → a Powerpipe **snapshot** (shareable, re-openable in the UI
   or at hub.powerpipe.io).
-</content>

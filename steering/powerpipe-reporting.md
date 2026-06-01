@@ -58,4 +58,3 @@ file is the always-apply ruleset when editing mods, dashboards, or queries.
 - Running the `all` aggregator unfiltered in a demo (a one-keystroke
   many-account API storm) — default to a single env, opt into `all`.
 - Treating Powerpipe output as your bill — it's resource state, not spend.
-</content>

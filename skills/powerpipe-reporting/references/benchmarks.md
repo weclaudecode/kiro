@@ -66,4 +66,3 @@ Run the same benchmark per environment via the aggregator and
 `--search-path-prefix`; name artifacts `out/<env>/<benchmark>-<date>.<fmt>`
 so prod never overwrites dev and you can diff over time
 (`multi-environment.md`).
-</content>
