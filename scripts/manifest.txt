@@ -12,6 +12,7 @@ file|steering/terraform-conventions.md|steering/terraform-conventions.md
 file|steering/terragrunt-conventions.md|steering/terragrunt-conventions.md
 file|steering/lambda-conventions.md|steering/lambda-conventions.md
 file|steering/gitlab-ci-conventions.md|steering/gitlab-ci-conventions.md
+file|steering/powerpipe-reporting.md|steering/powerpipe-reporting.md
 
 file|agents/terraform-reviewer.json|agents/terraform-reviewer.json
 file|agents/python-lambda-author.json|agents/python-lambda-author.json
@@ -23,6 +24,8 @@ file|agents/mr-reviewer.json|agents/mr-reviewer.json
 file|agents/doc-updater.json|agents/doc-updater.json
 file|agents/pipeline-troubleshooter.json|agents/pipeline-troubleshooter.json
 file|agents/steering-curator.json|agents/steering-curator.json
+file|agents/powerpipe-report-author.json|agents/powerpipe-report-author.json
+file|agents/aws-cost-analyst.json|agents/aws-cost-analyst.json
 
 file|prompts/new-lambda.md|prompts/new-lambda.md
 file|prompts/new-terraform-module.md|prompts/new-terraform-module.md
@@ -43,6 +46,7 @@ dir|skills/python-devops-aws|skills/python-devops-aws
 dir|skills/python-lambda|skills/python-lambda
 dir|skills/security-code-reviewer|skills/security-code-reviewer
 dir|skills/steampipe|skills/steampipe
+dir|skills/powerpipe-reporting|skills/powerpipe-reporting
 dir|skills/terraform-aws|skills/terraform-aws
 dir|skills/terragrunt-multi-account|skills/terragrunt-multi-account
 dir|skills/skill-creator|skills/skill-creator

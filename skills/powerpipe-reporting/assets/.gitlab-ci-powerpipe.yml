@@ -1,0 +1,77 @@
+# Scheduled Powerpipe reporting pipeline.
+#
+# Include from your root .gitlab-ci.yml, or run as its own scheduled
+# pipeline (CI/CD > Schedules). Runs the custom baseline benchmark for each
+# environment via an OIDC-assumed read-only audit role, publishes HTML for
+# humans and ASFF for Security Hub, and gates on critical findings.
+#
+# Auth is OIDC only (no long-lived AWS keys) — see steering/gitlab-ci-conventions.md.
+# Steampipe connection/aggregator setup is in the `steampipe` skill.
+
+stages:
+  - report
+
+variables:
+  POWERPIPE_VERSION: "1.0.0"        # pin; bump deliberately
+  STEAMPIPE_IMAGE: "turbot/steampipe:latest"
+
+.powerpipe_base:
+  stage: report
+  image: $STEAMPIPE_IMAGE
+  id_tokens:
+    AWS_ID_TOKEN:
+      aud: https://gitlab.example.com
+  before_script:
+    # Trade the OIDC token for short-lived creds on the audit role.
+    - >
+      export $(printf 'AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s'
+      $(aws sts assume-role-with-web-identity
+        --role-arn "$AWS_AUDIT_ROLE_ARN"
+        --role-session-name "powerpipe-${CI_PIPELINE_ID}"
+        --web-identity-token "$AWS_ID_TOKEN"
+        --duration-seconds 3600
+        --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]'
+        --output text))
+    # Steampipe + Powerpipe (Steampipe service must be up for Powerpipe to query).
+    - steampipe service start
+    - powerpipe mod install
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+
+report:
+  extends: .powerpipe_base
+  parallel:
+    matrix:
+      - ENV: [dev, staging, prod]
+  script:
+    - mkdir -p "out/${ENV}"
+    - DATE=$(date +%Y-%m-%d)
+    # Human-readable HTML
+    - >
+      powerpipe benchmark run acme_aws_reporting.benchmark.custom_baseline
+      --search-path-prefix "aws_${ENV}"
+      --output html > "out/${ENV}/baseline-${DATE}.html"
+    # Machine-readable ASFF (for Security Hub import) + JSON (for the gate)
+    - >
+      powerpipe benchmark run acme_aws_reporting.benchmark.custom_baseline
+      --search-path-prefix "aws_${ENV}"
+      --output asff > "out/${ENV}/baseline-${DATE}.asff.json"
+    - >
+      powerpipe benchmark run acme_aws_reporting.benchmark.custom_baseline
+      --search-path-prefix "aws_${ENV}"
+      --output json > "out/${ENV}/baseline-${DATE}.json"
+    # Fail the job on any critical 'alarm' (prod only; report-only elsewhere).
+    - |
+      if [ "$ENV" = "prod" ]; then
+        CRIT=$(jq '[.. | objects | select(.status? == "alarm" and .severity? == "critical")] | length' \
+               "out/${ENV}/baseline-${DATE}.json")
+        echo "prod critical findings: $CRIT"
+        [ "$CRIT" -eq 0 ] || { echo "Critical findings in prod"; exit 1; }
+      fi
+  artifacts:
+    when: always
+    paths:
+      - out/
+    expire_in: 30 days

@@ -70,6 +70,14 @@ This README is the index: what each skill does and when to reach for it. For the
 
 ---
 
+## powerpipe-reporting
+
+**What it does.** The reporting/visualization layer on top of Steampipe — authoring Powerpipe **mods** (dashboards, benchmarks, controls in HCL), running the same report across multiple AWS environments via a Steampipe aggregator and `--search-path-prefix`, producing artifacts (HTML, snapshots, ASFF→Security Hub, JSON gates), and AWS **cost** reporting through the AWS Pricing (free, estimates) and Cost Explorer ($0.01/call, actuals) MCP servers. Ships a starter `mod.pp`, two dashboards, a custom baseline benchmark, a scheduled GitLab CI job, and run/install scripts.
+
+**When to use.** Turning ad-hoc `steampipe query` one-offs into a repeatable per-environment report, authoring dashboards/benchmarks, diffing posture across dev/staging/prod, or reporting per-environment spend and turning idle resources into a $/month savings figure. The query/connection layer underneath lives in `steampipe`.
+
+---
+
 ## terraform-aws
 
 **What it does.** Production Terraform on AWS — project structure, remote state on S3 + DynamoDB, module design, provider configuration, AWS-specific patterns (IAM, VPC, KMS), variable validation, lifecycle and meta-arguments, drift management, and testing with `terraform validate`, tflint, checkov, and terratest.
@@ -95,6 +103,7 @@ Several skills assume context from others. Common chains:
 - `security-code-reviewer` ← `steampipe` (findings feed in)
 - `terragrunt-multi-account` → `terraform-aws` (module / HCL primitives) → `aws-solution-architect` (service selection)
 - `automation-solutions` → `security-code-reviewer` (the agents it runs in hooks) + `gitlab-pipeline` (pipeline-troubleshooter context)
+- `powerpipe-reporting` → `steampipe` (query/connection layer) → `terragrunt-multi-account` (audit-role layout) + `gitlab-pipeline` (CI publish job)
 
 ## Adding a new skill
 

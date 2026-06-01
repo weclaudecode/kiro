@@ -1,8 +1,9 @@
 # MCP Guide
 
 `mcp.json` registers Model Context Protocol servers that kiro can call as
-tools. The catalog ships `mcp/mcp.sample.json` with four servers our
-stack uses regularly.
+tools. The catalog ships `mcp/mcp.sample.json` with the servers our stack
+uses regularly — `aws-api`, `context7`, `gitlab`, `terraform`, and two AWS
+cost servers (`aws-pricing`, `cost-explorer`).
 
 ## Install paths
 
@@ -59,8 +60,25 @@ direnv allow
 | `context7` | `CONTEXT7_API_KEY` | Up-to-date library/framework docs (preferred over training data) |
 | `gitlab` | `GITLAB_TOKEN`, `GITLAB_API_URL` | Read/write Issues + MRs + pipelines |
 | `terraform` | (none) | HashiCorp's official Terraform MCP — module + provider docs |
+| `aws-pricing` | `AWS_REGION`, `AWS_PROFILE` | AWS list/unit pricing for **estimates**. Calls are **free**. Enabled. |
+| `cost-explorer` | `AWS_REGION`, `AWS_PROFILE` | **Actual** AWS spend. **$0.01 per Cost Explorer API call.** Ships `disabled: true`. |
 
 To turn one off, set `"disabled": true` in its block, or remove the block.
+
+### The two cost servers
+
+The `aws-cost-analyst` agent uses these (it inherits `mcp.json` via
+`includeMcpJson: true`). They split cleanly:
+
+- **`aws-pricing`** answers *"what would X cost?"* — list/unit prices. All
+  calls are **free**, so its read tools are in `autoApprove`. Enabled by
+  default.
+- **`cost-explorer`** answers *"what did environment Y actually spend?"* —
+  real billing data. **Every Cost Explorer API request bills $0.01.** It
+  therefore ships **`disabled: true`** (opt in deliberately) and with an
+  **empty `autoApprove`** so every billable call prompts. Group queries by
+  the `Environment` tag and use monthly granularity — see the
+  `powerpipe-reporting` skill's `cost-reporting` reference.
 
 ## `autoApprove` — what to allow without prompting
 
