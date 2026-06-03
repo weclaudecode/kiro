@@ -85,10 +85,16 @@ hooks/MCP wiring.
   before run.
 - **Architect / advisor:** `tools = ["read", "@mcp"]`. No edits. MCP
   enabled for queries (Steampipe, AWS API, etc.).
-- **Active investigator:** `tools = ["read", "shell", "@git"]`,
-  `allowedTools = ["read", "@git"]`. Pulls its own evidence from a CLI
-  but never mutates — `shell` stays out of `allowedTools` so every
-  command prompts. See `gitlab-ci-troubleshooter` (drives `glab`).
+- **Autonomous read-only investigator:** `tools = ["read", "shell",
+  "@git"]`, `allowedTools` the same. Auto-approves `shell` so it pulls
+  its own evidence from a CLI without a prompt per call; stays read-only
+  via the prompt (GET-only commands, no `write` tool). See
+  `gitlab-ci-troubleshooter` (drives `glab`). Only do this when the
+  prompt strictly constrains the CLI to read-only verbs.
+- **Cautious reviewer:** `tools = ["read", "shell", "@git"]`,
+  `allowedTools = ["read", "@git"]` — `shell` stays out of `allowedTools`
+  so a stray mutating command (e.g. `terraform apply`) can't fire
+  silently. See `terraform-reviewer`, `security-auditor`.
 
 ## Tips
 

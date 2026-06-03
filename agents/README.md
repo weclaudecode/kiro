@@ -23,12 +23,14 @@ Install one with `scripts/install.sh` (it lands in `~/.kiro/agents/` or
 | `powerpipe-report-author` | Authors/runs Powerpipe dashboards + benchmarks over Steampipe, per environment | `read`, `write`, `shell` | yes (prompts) |
 | `aws-cost-analyst` | FinOps: estimates (Pricing MCP) + actual per-env spend (Cost Explorer MCP) + waste→savings | `read`, `@mcp` | no |
 | `python-lambda-author` | Scaffolds Powertools Lambda handlers, tests, packaging | `read`, `write`, `shell` | yes (prompts) |
-| `doc-updater` | Proposes README/docs patches from a diff | `read`, `write`, `@git` | yes (prompts) |
-| `steering-curator` | Keeps `.kiro/steering/` conventions in sync | `read`, `write`, `@git` | yes (prompts) |
+| `doc-updater` | Proposes README/docs patches from a diff (unified diffs as output — never applied) | `read`, `@git` | no |
+| `steering-curator` | Keeps `.kiro/steering/` conventions in sync (proposes unified diffs — never applied) | `read`, `@git` | no |
 
-"Mutates? no" means the agent only ever reads — it has neither `write`
-nor an auto-approved `shell`, so it cannot change files, the repo, or any
-remote. "prompts" means writes/commands are possible but never
+"Mutates? no" means the agent never changes files, the repo, or any
+remote. Most achieve this structurally (no `write`, no auto-approved
+`shell`); `gitlab-ci-troubleshooter` auto-approves `shell` for autonomy
+but is held read-only by its prompt (GET-only `glab`, read-only git, and
+no `write` tool). "prompts" means writes/commands are possible but never
 auto-approved.
 
 ## `gitlab-ci-troubleshooter`
@@ -77,13 +79,15 @@ writes a human-readable report.
 
 ### Read-only guarantees
 
-- `tools: ["read", "shell", "@git"]` with only `["read", "@git"]` in
-  `allowedTools` — so **every `glab`/shell command prompts** before it
-  runs. Nothing executes silently.
-- The prompt enforces a **GET-only `glab`** allow/forbid list (no
-  `ci run|retry|cancel|delete`, no `mr create|merge|approve`, no
-  `api -X POST|PUT|DELETE|PATCH`) and **read-only git** (no
-  commit/push/checkout/reset). Fixes are proposed, never applied.
+- `tools` and `allowedTools` are both `["read", "shell", "@git"]` — there
+  is **no `write` tool**, so the agent can never edit files, and `shell`
+  is auto-approved so it pulls evidence without a prompt on every `glab`
+  call.
+- Read-only is enforced by the **prompt**: a **GET-only `glab`**
+  allow/forbid list (no `ci run|retry|cancel|delete`, no
+  `mr create|merge|approve`, no `api -X POST|PUT|DELETE|PATCH`) and
+  **read-only git** (no commit/push/checkout/reset). Fixes are proposed,
+  never applied.
 
 ### Usage
 
