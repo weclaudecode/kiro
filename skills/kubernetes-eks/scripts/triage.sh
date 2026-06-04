@@ -12,7 +12,11 @@
 set -euo pipefail
 
 NS="${1:-}"
-if [[ -n "$NS" ]]; then SCOPE=(-n "$NS"); LABEL="namespace=$NS"; else SCOPE=(-A); LABEL="all namespaces"; fi
+if [[ -n "$NS" ]]; then
+  SCOPE=(-n "$NS"); LABEL="namespace=$NS"; RCOL=4   # NAME READY STATUS RESTARTS AGE
+else
+  SCOPE=(-A);       LABEL="all namespaces"; RCOL=5   # NAMESPACE NAME READY STATUS RESTARTS AGE
+fi
 
 command -v kubectl >/dev/null 2>&1 || { echo "kubectl not found on PATH" >&2; exit 127; }
 
@@ -31,9 +35,10 @@ kubectl get events "${SCOPE[@]}" --field-selector type=Warning \
   --sort-by=.lastTimestamp 2>/dev/null | tail -40 || true
 
 section "restart hotspots (pods with restarts)"
-# columns: namespace name ready status restarts age — keep rows where restarts > 0
+# RESTARTS column position depends on scope: $5 under -A (leading NAMESPACE),
+# $4 under -n. The column may read like "5 (3h ago)"; $RCOL+0 coerces the count.
 kubectl get pods "${SCOPE[@]}" --no-headers 2>/dev/null \
-  | awk '$4+0 > 0 {print}' || true
+  | awk -v c="$RCOL" '$c+0 > 0 {print}' || true
 
 section "node conditions"
 kubectl get nodes -o wide 2>/dev/null || true

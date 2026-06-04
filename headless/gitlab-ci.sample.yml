@@ -74,13 +74,17 @@ kiro-pipeline-triage:
   allow_failure: true
 
 # 3) Nightly Kubernetes/EKS health triage (scheduled pipeline).
+#    REQUIRES a runner image that already has `kubectl` and `awscli` (the
+#    shared .kiro_base before_script does NOT install them) plus a kubeconfig
+#    obtained via OIDC, e.g. `aws eks update-kubeconfig`. Use a custom image
+#    or add an install step before the script below.
 kiro-eks-nightly:
   <<: *kiro_base
   stage: report
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
   script:
-    # Assumes kubeconfig/aws creds are available to the runner (OIDC).
+    # Assumes kubectl + aws creds (OIDC) and a kubeconfig are present.
     - |
       { kubectl get events -A --sort-by=.lastTimestamp | tail -80; \
         kubectl get pods -A --field-selector=status.phase!=Running; } \

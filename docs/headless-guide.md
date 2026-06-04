@@ -3,8 +3,9 @@
 Headless (non-interactive) mode runs kiro-cli as a one-shot: it takes a
 prompt, prints the answer to stdout, and exits. This is what makes kiro
 usable in **GitLab CI jobs, cron/systemd timers, and git hooks** — no TUI,
-no human in the loop. Shipped in kiro CLI **2.0** (alongside native
-Windows support).
+no human in the loop. It landed in a recent kiro CLI release (the 2.0
+line, alongside native Windows support) — confirm with `kiro-cli chat
+--help` on your installed version.
 
 > The catalog's `automation-solutions` skill covers the *workflow* side
 > (which check belongs in pre-commit vs pre-push vs cron, fail-open
