@@ -38,13 +38,15 @@ hooks/MCP wiring.
 | `description` | One sentence that helps you (and kiro) pick this agent. |
 | `model` | Override the default model for this agent. Optional. |
 | `prompt` | The system prompt. Inline string, or `"file:///abs/path/PROMPT.md"`. |
-| `tools` | Tool families this agent can use: `read`, `write`, `shell`, `web`, `@git`, `@mcp`, `*` |
-| `allowedTools` | Subset of `tools` that auto-approve (no per-call prompt). Keep this tight — `read` and `@git` are usually safe. |
+| `tools` | Tool families this agent can use: `read`, `write`, `shell`, `web`, `@git`, `@mcp`, `subagent`, `*`. (Canonical aliases also accepted: `fs_read`, `fs_write`, `execute_bash`, `use_aws`.) |
+| `allowedTools` | Subset of `tools` that auto-approve (no per-call prompt). Keep this tight — `read` and `@git` are usually safe. Supports globs: `"@eks/list_*"`. |
+| `toolsSettings` | Per-tool fine-grained allow/deny — path globs, command regexes, AWS service lists. See **Fine-grained gating** below. |
 | `resources` | Files/skills preloaded into the agent's context every session. URIs: `file://`, `skill://`. |
 | `mcpServers` | Per-agent MCP server overrides. Usually omitted; rely on `includeMcpJson`. |
 | `includeMcpJson` | If true, this agent inherits the workspace/global `mcp.json`. |
-| `hooks` | Pre/post tool-use hooks (CLI hooks live HERE, not in `.kiro/hooks/`). |
-| `toolsSettings.subagent` | Sub-agent allow-list — agents this agent can dispatch to. |
+| `hooks` | Pre/post tool-use hooks — events `agentSpawn`, `userPromptSubmit`, `preToolUse`, `postToolUse`, `stop`. CLI hooks live HERE, not in `.kiro/hooks/`. |
+| `keyboardShortcut` | Optional quick-switch binding (e.g. `"ctrl+a"`). |
+| `welcomeMessage` | Optional message shown when the agent activates. |
 
 ## Walkthrough: anatomy of `terraform-reviewer.json`
 
@@ -95,6 +97,89 @@ hooks/MCP wiring.
   `allowedTools = ["read", "@git"]` — `shell` stays out of `allowedTools`
   so a stray mutating command (e.g. `terraform apply`) can't fire
   silently. See `terraform-reviewer`, `security-auditor`.
+
+## Fine-grained gating (`toolsSettings`)
+
+`allowedTools` is binary (prompt / don't prompt). `toolsSettings` adds a
+finer layer: which paths a tool may touch, which shell commands may run,
+which AWS services it may call. Deny rules evaluate **before** allow.
+
+```jsonc
+"toolsSettings": {
+  "fs_write": {
+    "allowedPaths": ["**/*.tf", "**/*.hcl", "*.py", "k8s/**"],
+    "deniedPaths":  ["**/.git/**", "**/secrets.env", "**/*.tfstate"]
+  },
+  "execute_bash": {
+    "allowedCommands": ["terraform (plan|validate|fmt).*", "kubectl (get|describe|logs|top) .*", "checkov .*"],
+    "deniedCommands":  ["terraform apply.*", "kubectl delete.*", "sudo .*", "rm -rf .*"],
+    "autoAllowReadonly": true,
+    "denyByDefault": true
+  },
+  "use_aws": {
+    "allowedServices": ["s3", "eks", "ec2", "iam", "logs", "cloudformation", "ce"],
+    "deniedServices":  ["kms", "secretsmanager"],
+    "autoAllowReadonly": true
+  }
+}
+```
+
+- `execute_bash` patterns are **regex**; anchor them (`\A…\z`) when you
+  need an exact match so `terraform apply-fake` can't slip through a loose
+  `terraform apply.*`.
+- `autoAllowReadonly` trusts GET-class operations (read-only AWS calls,
+  read-only shell) without prompting; pair it with a tight allow-list.
+
+> **Security caveat — don't treat `deniedCommands` as a hard wall.**
+> There have been real enforcement bugs where denied commands ran before
+> the permission check (Amazon Q issue #2477) and where `allowedPaths`
+> didn't suppress prompts (Kiro issue #4212). Use `toolsSettings` as
+> defense-in-depth, but put the *real* boundary at the layer below kiro:
+> least-privilege IAM / scoped tokens, a `preToolUse` guardrail hook (see
+> `hooks/cli-pre-tool-secret-scan.md`), and a throwaway container for
+> anything autonomous. Pin a known-good kiro version and test that your
+> deny rules actually block.
+
+## Subagents (delegation)
+
+A custom agent can fan work out to focused **subagents** when its `tools`
+array includes the `subagent` tool. Subagents run concurrently (up to
+four), each loading its own narrow agent config; invoke them by naming the
+target agent in the task ("Use the `terraform-reviewer` to check the IaC
+diff, and `eks-troubleshooter` for the failing pods"). They inherit the
+referenced agent's `tools`/`toolsSettings`/`allowedTools`, so a read-only
+subagent stays read-only even when an orchestrator drives it.
+
+```jsonc
+{
+  "name": "platform-orchestrator",
+  "tools": ["read", "@git", "subagent"],
+  "allowedTools": ["read", "@git"]
+  // prompt routes to terraform-reviewer / eks-troubleshooter /
+  // gitlab-ci-troubleshooter / aws-cost-analyst by name
+}
+```
+
+Use it to run a multi-faceted review (IaC + security + cost) in one pass.
+See `../agents/platform-orchestrator.json`. (Subagents are a Kiro-era
+feature — kiro CLI ≥ 1.23; `/agent` on older Amazon Q CLI builds won't
+have them.)
+
+## Running an agent headlessly
+
+Any agent works in non-interactive mode — pass `--agent` to `chat
+--no-interactive`:
+
+```bash
+git diff origin/main...HEAD \
+  | kiro-cli chat --no-interactive --agent mr-reviewer \
+      --trust-tools=read,grep "Review this diff. Emit JSONL findings."
+```
+
+This is how the read-only agents (`mr-reviewer`,
+`pipeline-troubleshooter`, `eks-troubleshooter`) plug into GitLab CI and
+cron. Keep `--trust-tools` to the read class; never `--trust-all-tools` in
+a pipeline. Full patterns + auth in `headless-guide.md`.
 
 ## Tips
 

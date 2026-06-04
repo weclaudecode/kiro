@@ -1,6 +1,6 @@
 {
   "_install_path": "~/.kiro/settings/mcp.json  OR  <project>/.kiro/settings/mcp.json",
-  "_doc": "MCP server registry for kiro-cli. SECRETS: never hardcode — use ${ENV_VAR} placeholders, populate the env via direnv (project) or ~/.config/claude/secrets.env (global). Workspace mcp.json overrides global on conflict.",
+  "_doc": "MCP server registry for kiro-cli. SECRETS: never hardcode — use ${ENV_VAR} placeholders, populate the env via direnv (project) or ~/.config/claude/secrets.env (global). Workspace mcp.json overrides global on conflict. Pick servers deliberately: comment out (or set disabled:true) anything you don't use. See docs/mcp-guide.md.",
   "mcpServers": {
     "aws-api": {
       "command": "uvx",
@@ -23,7 +23,17 @@
       "autoApprove": ["resolve-library-id", "get-library-docs"],
       "timeout": 60000
     },
+    "gitlab-official": {
+      "_doc": "GitLab's FIRST-PARTY MCP server (Premium/Ultimate; GitLab.com, Self-Managed, Dedicated). Endpoint https://<host>/api/v4/mcp. Auth is OAuth 2.0 Dynamic Client Registration — on first connect run /mcp and complete the browser auth (no PAT in config). This stdio form bridges to the HTTP endpoint via mcp-remote and needs Node 20+. PREFERRED over the community 'gitlab' server below when you have Premium/Ultimate. Disabled by default so you opt in after setting GITLAB_HOST.",
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://${GITLAB_HOST}/api/v4/mcp"],
+      "env": {},
+      "disabled": true,
+      "autoApprove": [],
+      "timeout": 120000
+    },
     "gitlab": {
+      "_doc": "Community PAT-based GitLab MCP server. Fallback for Free tier or when OAuth DCR is unavailable. Uses a read-scoped GITLAB_TOKEN. Prefer 'gitlab-official' on Premium/Ultimate.",
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-gitlab"],
       "env": {
@@ -35,12 +45,39 @@
       "timeout": 60000
     },
     "terraform": {
+      "_doc": "AWS Labs Terraform MCP server: AWS-on-Terraform best practices, registry provider/module lookup, and a built-in Checkov scan (RunCheckovScan). Needs the terraform CLI + checkov on PATH. NOTE: this is the awslabs server, NOT HashiCorp's. For registry/HCP-Terraform workspace management use hashicorp/terraform-mcp-server instead (see docs/mcp-guide.md).",
       "command": "uvx",
       "args": ["awslabs.terraform-mcp-server"],
       "env": {},
       "disabled": false,
-      "autoApprove": [],
+      "autoApprove": ["SearchAwsProviderDocs", "SearchAwsccProviderDocs", "SearchSpecificAwsIaModules", "SearchUserProvidedModule"],
       "timeout": 60000
+    },
+    "eks": {
+      "_doc": "AWS Labs EKS MCP server: inspect/diagnose EKS clusters and Kubernetes workloads (pods, deployments, events, logs), CloudWatch correlation, and AWS-Kubernetes best practices. Read-only by DEFAULT — mutation needs the server's --allow-write flag (intentionally omitted here). Used by the eks-troubleshooter agent.",
+      "command": "uvx",
+      "args": ["awslabs.eks-mcp-server@latest"],
+      "env": {
+        "AWS_REGION": "${AWS_REGION}",
+        "AWS_PROFILE": "${AWS_PROFILE}",
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": [],
+      "timeout": 120000
+    },
+    "cloudwatch": {
+      "_doc": "AWS Labs CloudWatch MCP server: metrics, alarms, and Logs Insights queries for troubleshooting. Read-only. Pairs with eks-troubleshooter and aws-architect for incident triage.",
+      "command": "uvx",
+      "args": ["awslabs.cloudwatch-mcp-server@latest"],
+      "env": {
+        "AWS_REGION": "${AWS_REGION}",
+        "AWS_PROFILE": "${AWS_PROFILE}",
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": [],
+      "timeout": 120000
     },
     "aws-pricing": {
       "_doc": "AWS list/unit pricing for cost ESTIMATES. All pricing API calls are FREE. Read-only.",
@@ -56,9 +93,22 @@
       "timeout": 60000
     },
     "cost-explorer": {
-      "_doc": "ACTUAL AWS spend via Cost Explorer. WARNING: each Cost Explorer API request bills $0.01. Read-only but PAID. Ships disabled — set disabled:false to opt in. Keep autoApprove EMPTY so every billable call prompts.",
+      "_doc": "ACTUAL AWS spend via Cost Explorer (narrow). WARNING: each Cost Explorer API request bills $0.01. Read-only but PAID. Ships disabled — set disabled:false to opt in. Keep autoApprove EMPTY so every billable call prompts. Choose THIS or 'aws-billing' (broader), not both.",
       "command": "uvx",
       "args": ["awslabs.cost-explorer-mcp-server@latest"],
+      "env": {
+        "AWS_REGION": "${AWS_REGION}",
+        "AWS_PROFILE": "${AWS_PROFILE}",
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": true,
+      "autoApprove": [],
+      "timeout": 120000
+    },
+    "aws-billing": {
+      "_doc": "Broad FinOps server (awslabs.billing-cost-management-mcp-server): bridges Cost Explorer, Cost Optimization Hub, Compute Optimizer, Savings Plans, Budgets, S3 Storage Lens, and Cost Anomaly Detection. Supersedes the narrow 'cost-explorer' server. WARNING: its Cost-Explorer-backed tools bill $0.01 per call. Ships disabled with EMPTY autoApprove so every billable call prompts. Enable EITHER this OR 'cost-explorer'.",
+      "command": "uvx",
+      "args": ["awslabs.billing-cost-management-mcp-server@latest"],
       "env": {
         "AWS_REGION": "${AWS_REGION}",
         "AWS_PROFILE": "${AWS_PROFILE}",

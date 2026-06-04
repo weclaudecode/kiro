@@ -3,7 +3,7 @@
 A catalog of [kiro CLI](https://kiro.dev/docs/cli/) configuration
 artifacts — steering files, custom agents, prompts, hooks, MCP samples,
 and skills — for an AWS / Lambda / Python / Terraform / Terragrunt /
-GitLab CI stack.
+GitLab CI / Kubernetes (EKS) stack. Includes headless (CI/cron) recipes.
 
 Nothing here auto-installs. Pick what you want with `scripts/install.sh`,
 which prompts per artifact.
@@ -28,21 +28,25 @@ cd ~/code/kiro
 | `hooks/` | IDE file-event hooks + a CLI snippet | `<project>/.kiro/hooks/` (IDE) / agent JSON (CLI) |
 | `mcp/` | `mcp.json` sample | `~/.kiro/settings/mcp.json` |
 | `settings/` | `cli.json` sample | `~/.kiro/settings/cli.json` |
-| `skills/` | Nine stack/workflow skills + `skill-creator` for authoring new skills | `~/.kiro/skills/<name>/` |
+| `skills/` | Eleven stack/workflow skills + `skill-creator` for authoring new skills | `~/.kiro/skills/<name>/` |
+| `headless/` | GitLab CI job samples + a hardened non-interactive wrapper | reference (not installed) |
 | `scripts/` | `install.sh`, `list.sh`, `manifest.txt` | runs from this repo |
 
 ## Documentation
 
 - [`docs/README.md`](docs/README.md) — catalog overview & picking philosophy
 - [`docs/install.md`](docs/install.md) — install kiro CLI + use this catalog
+- [`docs/use-cases.md`](docs/use-cases.md) — which agent/skill/MCP to use per task
 - [`docs/steering-guide.md`](docs/steering-guide.md) — steering inclusion modes
-- [`docs/agents-guide.md`](docs/agents-guide.md) — kiro agent anatomy
+- [`docs/agents-guide.md`](docs/agents-guide.md) — kiro agent anatomy, `toolsSettings`, subagents
 - [`docs/mcp-guide.md`](docs/mcp-guide.md) — MCP setup & secret handling
+- [`docs/headless-guide.md`](docs/headless-guide.md) — non-interactive mode for CI/cron
 - [`docs/specs/`](docs/specs/) — design docs for changes to this catalog
 
 ## Conventions in one paragraph
 
 Stack: AWS, Python 3.12 on Lambda (`arm64`), Terraform `>= 1.7` +
-Terragrunt `>= 0.55`, GitLab CI with OIDC to AWS, GitOps. No long-lived
-AWS keys. No secrets in git. Powertools-first Lambda handlers. Read the
-files in `steering/` for the full picture.
+Terragrunt `>= 0.55`, GitLab CI with OIDC to AWS, Kubernetes on EKS (IRSA,
+GitOps reconcile). No long-lived AWS keys. No secrets in git.
+Powertools-first Lambda handlers. Read the files in `steering/` for the
+full picture.

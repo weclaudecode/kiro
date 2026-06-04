@@ -38,6 +38,14 @@ This README is the index: what each skill does and when to reach for it. For the
 
 ---
 
+## kubernetes-eks
+
+**What it does.** Production Kubernetes on Amazon EKS — workload manifest design (resource limits, probes, securityContext, topology spread, PodDisruptionBudgets), IRSA for AWS access, NetworkPolicy and Pod Security Admission, RBAC scoping, Helm/Kustomize and GitOps delivery, and a read-only triage playbook (CrashLoop/ImagePull/Pending/OOMKilled/node pressure with an exit-code decoder). Ships a GET-only `triage.sh` snapshot script.
+
+**When to use.** Writing or reviewing a Deployment/Helm chart/Kustomize overlay for EKS, wiring a pod to AWS via IRSA, hardening workloads, or debugging a failing pod/node. The IaC that provisions the cluster lives in `terraform-aws` / `terragrunt-multi-account`; broader topology decisions live in `aws-solution-architect`. The `eks-troubleshooter` agent loads this skill.
+
+---
+
 ## python-devops-aws
 
 **What it does.** Production-grade Python patterns for AWS automation outside Lambda — boto3 client/resource use, credential resolution, assume-role, retries and pagination, error handling, structured logging, packaging, and testing.
@@ -102,6 +110,7 @@ Several skills assume context from others. Common chains:
 - `steampipe` → `terragrunt-multi-account` (audit-role layout) → `aws-solution-architect` (topology)
 - `security-code-reviewer` ← `steampipe` (findings feed in)
 - `terragrunt-multi-account` → `terraform-aws` (module / HCL primitives) → `aws-solution-architect` (service selection)
+- `kubernetes-eks` → `terraform-aws` / `terragrunt-multi-account` (cluster + IRSA IaC) → `aws-solution-architect` (topology); `security-code-reviewer` (manifest review)
 - `automation-solutions` → `security-code-reviewer` (the agents it runs in hooks) + `gitlab-pipeline` (pipeline-troubleshooter context)
 - `powerpipe-reporting` → `steampipe` (query/connection layer) → `terragrunt-multi-account` (audit-role layout) + `gitlab-pipeline` (CI publish job)
 
