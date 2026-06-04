@@ -1,0 +1,95 @@
+# ---------------------------------------------------------------------------
+# Headless kiro-cli jobs for GitLab CI.  REFERENCE / COPY-PASTE — not installed
+# by scripts/install.sh.  Lift the jobs you want into your .gitlab-ci.yml (or a
+# .gitlab/ci/*.yml include) and adapt image/paths to your runners.
+#
+# Requirements:
+#   - KIRO_API_KEY  : a masked + PROTECTED project CI/CD variable (ksk_...).
+#                     Needs a Pro/Pro+/Power subscription.
+#   - The catalog installed into the project's .kiro/ (agents + steering),
+#     OR rely on global ~/.kiro/ baked into a custom runner image.
+#   - For AWS-touching jobs: OIDC to AWS (see the gitlab-pipeline skill), NOT
+#     static keys.  These samples assume a role is already assumed.
+#
+# Every job here runs a READ-ONLY agent with a narrow --trust-tools and is
+# advisory (allow_failure: true).  Earn the blocking gate later.
+# ---------------------------------------------------------------------------
+
+.kiro_base: &kiro_base
+  image: debian:stable-slim
+  variables:
+    KIRO_API_KEY: $KIRO_API_KEY
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends curl git ca-certificates jq
+    - curl -fsSL https://cli.kiro.dev/install | bash
+    - export PATH="$HOME/.local/bin:$PATH"
+    - kiro-cli whoami --format json >/dev/null   # fail fast if auth is missing
+
+# 1) MR review — security + IaC review on every merge request.
+kiro-mr-review:
+  <<: *kiro_base
+  stage: review
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  script:
+    - git fetch origin "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+    - |
+      git diff "origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME...HEAD" \
+        | kiro-cli chat --no-interactive --agent mr-reviewer \
+            --trust-tools=read,grep \
+            "Review this MR diff for security and Terraform/Terragrunt issues. Write JSONL findings to findings.jsonl, then print a short Markdown summary." \
+        | tee review.md
+  artifacts:
+    when: always
+    paths: [review.md, findings.jsonl]
+    expire_in: 1 week
+  allow_failure: true
+
+# 2) Pipeline triage — on failure, classify the root cause from a log the
+#    failing job left as an artifact.  pipeline-troubleshooter is the PASSIVE
+#    agent: it reads a log on stdin (no glab needed).  Have your build/test
+#    jobs tee their output to build.log and declare it as an artifact
+#    (artifacts: { when: on_failure, paths: [build.log] }); this job consumes it.
+#    For the ACTIVE flow that PULLS traces by URL, use the gitlab-ci-troubleshooter
+#    agent + glab on a runner image that has it.
+kiro-pipeline-triage:
+  <<: *kiro_base
+  stage: .post
+  needs: ["build"]          # the job that produced build.log
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: on_failure
+  script:
+    - test -f build.log || { echo "no build.log artifact to triage"; exit 0; }
+    - |
+      kiro-cli chat --no-interactive --agent pipeline-troubleshooter \
+          --trust-tools=read \
+          "Classify this failure (real/config/flaky) and emit root-cause JSON." \
+        < build.log \
+        | tee triage.json
+  artifacts:
+    when: always
+    paths: [triage.json]
+    expire_in: 1 week
+  allow_failure: true
+
+# 3) Nightly Kubernetes/EKS health triage (scheduled pipeline).
+kiro-eks-nightly:
+  <<: *kiro_base
+  stage: report
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+  script:
+    # Assumes kubeconfig/aws creds are available to the runner (OIDC).
+    - |
+      { kubectl get events -A --sort-by=.lastTimestamp | tail -80; \
+        kubectl get pods -A --field-selector=status.phase!=Running; } \
+        | kiro-cli chat --no-interactive --agent eks-troubleshooter \
+            --trust-tools=read --require-mcp-startup \
+            "Summarize cluster health: crashlooping/pending pods, recent warning events, and likely causes. Read-only." \
+        | tee eks-report.md
+  artifacts:
+    when: always
+    paths: [eks-report.md]
+    expire_in: 1 month
+  allow_failure: true

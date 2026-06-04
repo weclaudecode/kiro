@@ -23,15 +23,25 @@ Install one with `scripts/install.sh` (it lands in `~/.kiro/agents/` or
 | `powerpipe-report-author` | Authors/runs Powerpipe dashboards + benchmarks over Steampipe, per environment | `read`, `write`, `shell` | yes (prompts) |
 | `aws-cost-analyst` | FinOps: estimates (Pricing MCP) + actual per-env spend (Cost Explorer MCP) + waste→savings | `read`, `@mcp` | no |
 | `python-lambda-author` | Scaffolds Powertools Lambda handlers, tests, packaging | `read`, `write`, `shell` | yes (prompts) |
+| `eks-troubleshooter` | **Pulls** Kubernetes/EKS evidence via `kubectl` (GET-only) + EKS/CloudWatch MCP and reports root cause | `read`, `shell`, `use_aws`, `@git` | no |
+| `platform-orchestrator` | Delegates a multi-faceted review to specialist agents as **subagents** and merges findings (kiro ≥ 1.23) | `read`, `@git`, `subagent` | no |
 | `doc-updater` | Proposes README/docs patches from a diff (unified diffs as output — never applied) | `read`, `@git` | no |
 | `steering-curator` | Keeps `.kiro/steering/` conventions in sync (proposes unified diffs — never applied) | `read`, `@git` | no |
 
 "Mutates? no" means the agent never changes files, the repo, or any
 remote. Most achieve this structurally (no `write`, no auto-approved
-`shell`); `gitlab-ci-troubleshooter` auto-approves `shell` for autonomy
-but is held read-only by its prompt (GET-only `glab`, read-only git, and
+`shell`); `gitlab-ci-troubleshooter` and `eks-troubleshooter` auto-approve
+`shell` for autonomy but are held read-only by their prompt **and** by
+`toolsSettings` command gating (GET-only `glab`/`kubectl`, read-only git,
 no `write` tool). "prompts" means writes/commands are possible but never
 auto-approved.
+
+Two agents added in this revision show the newer surface:
+`eks-troubleshooter` uses `toolsSettings.execute_bash` to hard-gate
+`kubectl` to read verbs, and `platform-orchestrator` uses the `subagent`
+tool to fan a review out to the specialist agents (see
+[`../docs/agents-guide.md`](../docs/agents-guide.md) → Fine-grained gating
+and Subagents).
 
 ## `gitlab-ci-troubleshooter`
 
@@ -106,6 +116,84 @@ Other prompts it handles:
 
 - `skill://.kiro/skills/gitlab-pipeline/SKILL.md`
 - `file://.kiro/steering/gitlab-ci-conventions.md`
+
+## `eks-troubleshooter`
+
+The Kubernetes/EKS analogue of `gitlab-ci-troubleshooter`: an **active,
+strictly read-only** investigator. Give it a symptom and it pulls the
+evidence itself and reports the root cause — it never applies, deletes,
+scales, patches, edits, cordons, drains, or `exec`s.
+
+### What it does
+
+1. **Preflight** — checks `kubectl`, prints the current context, and asks
+   before touching anything that looks like prod.
+2. **Triage** — non-running pods + recent warning events, cluster-wide or
+   scoped to a namespace.
+3. **Drill in** — `describe` / `logs --previous` / `-o yaml` on the
+   suspect object; walks Deployment → ReplicaSet → Pod.
+4. **Classify** — OOMKilled (137) · CrashLoopBackOff · ImagePullBackOff ·
+   Pending/Unschedulable · CreateContainerConfigError · readiness/probe ·
+   node NotReady.
+5. **AWS correlation** — IRSA role/trust on the ServiceAccount, node-group
+   health, load balancer/target groups via the `eks` MCP and read-only
+   `use_aws`; application logs/metrics via the `cloudwatch` MCP.
+6. **Report** — TL;DR + confidence, quoted evidence, root cause, a
+   **proposed** fix (manifest field / IRSA change), and the read-only
+   commands to reproduce.
+
+### Read-only guarantees (defense in depth)
+
+- **Prompt:** a GET-only `kubectl` allow/forbid list and read-only git.
+- **`toolsSettings.execute_bash`:** `kubectl` is regex-gated to
+  `get|describe|logs|top|explain|...` and **denies**
+  `apply|delete|edit|patch|scale|rollout|cordon|drain|exec|...`, with
+  `denyByDefault: true`. `use_aws` is `autoAllowReadonly` and denies
+  `kms`/`secretsmanager`.
+- **No `write` tool** — it can never edit files.
+- The real backstop is still least-privilege kube RBAC + IAM; the EKS MCP
+  server runs without `--allow-write`.
+
+### Requirements
+
+- `kubectl` on `PATH` with a context for the target cluster (`aws eks
+  update-kubeconfig` / OIDC — no long-lived tokens).
+- The `eks` and `cloudwatch` MCP servers enabled in `mcp.json`
+  (`includeMcpJson: true`).
+
+### Usage
+
+```
+/agent eks-troubleshooter
+> Pods in the data namespace keep restarting — why?
+```
+
+Or headless (nightly snapshot):
+
+```
+skills/kubernetes-eks/scripts/triage.sh \
+  | kiro-cli chat --no-interactive --agent eks-troubleshooter \
+      --trust-tools=read "Summarize cluster health and likely causes."
+```
+
+### Loaded context
+
+- `skill://.kiro/skills/kubernetes-eks/SKILL.md`
+- `file://.kiro/steering/kubernetes-conventions.md`
+- `file://.kiro/steering/aws-security.md`
+
+## `platform-orchestrator`
+
+A read-only **review coordinator** that delegates to the specialist agents
+as **subagents** (kiro CLI ≥ 1.23). Hand it a change that spans IaC,
+security, cost, pipelines, and Kubernetes; it routes each facet to the
+right specialist (`terraform-reviewer`, `security-auditor`,
+`aws-cost-analyst`, `gitlab-ci-troubleshooter`, `eks-troubleshooter`),
+runs them concurrently, de-duplicates overlap, and merges one prioritized
+report. It and every subagent are read-only — findings are proposed, never
+applied. If the installed CLI lacks subagent support it says so and falls
+back to recommending the specialists individually. See
+[`../docs/agents-guide.md`](../docs/agents-guide.md) → Subagents.
 
 ## Conventions in one paragraph
 

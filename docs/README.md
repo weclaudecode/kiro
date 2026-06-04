@@ -15,7 +15,8 @@ auto-installs. You pick the artifacts you want and copy them into either
 | `hooks/` | IDE file-event hook samples + a CLI pre-tool hook snippet | `<project>/.kiro/hooks/` (IDE) or pasted into agent JSON (CLI) |
 | `mcp/` | `mcp.json` sample with placeholders | `~/.kiro/settings/mcp.json` or `<project>/.kiro/settings/mcp.json` |
 | `settings/` | `cli.json` sample (global only) | `~/.kiro/settings/cli.json` |
-| `skills/` | Nine stack/workflow skills plus `skill-creator` (already structured for direct copy) | `~/.kiro/skills/<name>/` or `.kiro/skills/<name>/` |
+| `skills/` | Ten stack/workflow skills plus `skill-creator` (already structured for direct copy) | `~/.kiro/skills/<name>/` or `.kiro/skills/<name>/` |
+| `headless/` | GitLab CI job samples + a hardened non-interactive wrapper | reference (not installed) |
 | `scripts/` | `install.sh` + `list.sh` + the manifest | run from this repo |
 
 ## Picking philosophy
@@ -43,7 +44,9 @@ auto-installs. You pick the artifacts you want and copy them into either
 ## Deeper reading
 
 - `install.md` — install the kiro CLI on Linux + use this catalog
+- `use-cases.md` — task → agent/skill/MCP/headless map for this stack
 - `steering-guide.md` — inclusion modes + frontmatter reference
-- `agents-guide.md` — kiro agent JSON anatomy + walkthrough
+- `agents-guide.md` — kiro agent JSON anatomy, `toolsSettings`, subagents
 - `mcp-guide.md` — env-var pattern + secret handling + troubleshooting
+- `headless-guide.md` — non-interactive mode (CI/cron) mechanics + GitLab recipe
 - `specs/` — design docs for changes to this catalog
