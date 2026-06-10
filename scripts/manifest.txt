@@ -14,6 +14,7 @@ file|steering/lambda-conventions.md|steering/lambda-conventions.md
 file|steering/gitlab-ci-conventions.md|steering/gitlab-ci-conventions.md
 file|steering/kubernetes-conventions.md|steering/kubernetes-conventions.md
 file|steering/powerpipe-reporting.md|steering/powerpipe-reporting.md
+file|steering/superpowers-tools.md|steering/superpowers-tools.md
 
 file|agents/terraform-reviewer.json|agents/terraform-reviewer.json
 file|agents/python-lambda-author.json|agents/python-lambda-author.json
@@ -54,3 +55,4 @@ dir|skills/powerpipe-reporting|skills/powerpipe-reporting
 dir|skills/terraform-aws|skills/terraform-aws
 dir|skills/terragrunt-multi-account|skills/terragrunt-multi-account
 dir|skills/skill-creator|skills/skill-creator
+dir|skills/superpowers|skills/superpowers

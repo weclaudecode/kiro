@@ -14,6 +14,14 @@ This README is the index: what each skill does and when to reach for it. For the
 
 ---
 
+## superpowers
+
+**What it does.** A disciplined software-development workflow ported from [obra/superpowers](https://github.com/obra/superpowers) (MIT) and adapted for kiro: brainstorm → git worktree → write plan → execute (subagent-driven or inline) → test-driven development → code review → finish the branch, plus systematic-debugging and verification-before-completion. The `SKILL.md` is the router; each stage is a reference file under `references/`. A companion steering file (`steering/superpowers-tools.md`, installed alongside) carries the Claude Code → kiro **tool-mapping table** so the original tool names (`Read`/`Edit`/`Bash`/`Task`/`Skill`) translate to kiro verbs (`fs_read`/`fs_write`/`execute_bash`/`subagent`).
+
+**When to use.** Starting any non-trivial build/fix/refactor where process matters — you want the agent to refine and plan before coding, drive each change test-first, review against the plan, and close the branch deliberately. Skip for throwaway prototypes or pure config edits. To author *new* kiro skills, use `skill-creator` rather than this bundle.
+
+---
+
 ## automation-solutions
 
 **What it does.** Playbook for running kiro-cli headlessly — git hooks (pre-commit review, commit-message draft/validate, post-commit doc sync, pre-push security scan) and scheduled jobs (nightly pipeline triage, dependency CVE scan, weekly steering refresh). Ships runnable scripts, a `.githooks/` installer, and the read-only agents each workflow invokes. Every invocation is read-only; anything that would change a file is proposed as a unified diff.

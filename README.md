@@ -28,7 +28,7 @@ cd ~/code/kiro
 | `hooks/` | IDE file-event hooks + a CLI snippet | `<project>/.kiro/hooks/` (IDE) / agent JSON (CLI) |
 | `mcp/` | `mcp.json` sample | `~/.kiro/settings/mcp.json` |
 | `settings/` | `cli.json` sample | `~/.kiro/settings/cli.json` |
-| `skills/` | Eleven stack/workflow skills + `skill-creator` for authoring new skills | `~/.kiro/skills/<name>/` |
+| `skills/` | Eleven stack/workflow skills + `superpowers` (a dev-methodology bundle ported from obra/superpowers) + `skill-creator` for authoring new skills | `~/.kiro/skills/<name>/` |
 | `headless/` | GitLab CI job samples + a hardened non-interactive wrapper | reference (not installed) |
 | `scripts/` | `install.sh`, `list.sh`, `manifest.txt` | runs from this repo |
 
