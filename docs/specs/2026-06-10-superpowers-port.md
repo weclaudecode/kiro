@@ -47,8 +47,8 @@ manifest flow (consistent with every other artifact here), not a `POWER.md`.
 - `steering/superpowers-tools.md` — **the platform adaptation**: an
   `inclusion: always` steering block with the Claude Code → kiro **tool
   mapping table** (`Read`→`fs_read`, `Edit`/`Write`→`fs_write`,
-  `Bash`→`execute_bash`, `Task`→`subagent`/`/agent`, `Skill`→read the
-  `SKILL.md`, `TodoWrite`→plan checkboxes, `WebFetch`→`@web`, …) plus the
+  `Bash`→`execute_bash`, `Task`→`subagent`, `Skill`→read the
+  `SKILL.md`, `TodoWrite`→plan checkboxes, `WebFetch`→`web`, …) plus the
   cross-skill reference convention and what does *not* translate.
 - Registered both in `scripts/manifest.txt`; indexed in `skills/README.md`
   and the two catalog READMEs.

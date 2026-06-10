@@ -43,7 +43,8 @@ diff itself and avoids it rationalizing the choices it watched you make.
 
 ## kiro adaptation
 
-- `Task` (general-purpose reviewer) → kiro `subagent` / `/agent <name>`.
+- `Task` (general-purpose reviewer) → kiro `subagent` tool: name the target
+  agent in the task (your orchestrator needs `subagent` in its `tools`).
   This catalog ships reviewer agents — e.g. `mr-reviewer`,
   `security-auditor`, `terraform-reviewer` — point the subagent at the right
   one. They're read-only by config, which is exactly what a reviewer wants.

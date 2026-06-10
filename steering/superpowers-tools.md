@@ -13,19 +13,24 @@ acting**. Same intent, kiro verb.
 
 ## Tool name mapping
 
+kiro's tool families are `read`, `write`, `shell`, `web`, `use_aws`, `@git`,
+`@mcp`, and `subagent` (see `docs/agents-guide.md`). The `read`/`write`/`shell`
+family names and their canonical aliases (`fs_read`/`fs_write`/`execute_bash`)
+are interchangeable; the agent JSON `tools` array uses the short forms.
+
 | Claude Code tool / idiom | kiro CLI equivalent | Notes |
 |---|---|---|
-| `Read` | `fs_read` (alias `read`) | Read a file or list a directory. |
-| `Glob` | `fs_read` | kiro's read tool globs/lists; or `execute_bash` (`rg --files`, `find`). |
-| `Grep` | `fs_read` (search) | or `execute_bash` (`rg`, `grep`). |
-| `Edit` / `MultiEdit` | `fs_write` (alias `write`) | kiro `fs_write` does targeted string-replace edits. |
-| `Write` | `fs_write` | Create or overwrite a file. |
-| `NotebookEdit` | `fs_write` | Edit notebook cells as text. |
-| `Bash` | `execute_bash` (alias `shell`) | Run a shell command. |
-| `Task` / "dispatch a subagent" | `subagent` tool, invoked as `/agent <name>` | Delegate to a custom kiro agent (up to 4 concurrent). See `docs/agents-guide.md`. |
-| `Skill` / "invoke the X skill" | `fs_read` on `.kiro/skills/<x>/SKILL.md`, or `/<x>` if installed as manual steering | kiro has no `Skill` tool; load a skill by reading its `SKILL.md`. |
+| `Read` | `read` (alias `fs_read`) | Read a file or list a directory. |
+| `Glob` | `read` | kiro's read tool globs/lists; or `shell` (`rg --files`, `find`). |
+| `Grep` | `read` (search) | or `shell` (`rg`, `grep`). |
+| `Edit` / `MultiEdit` | `write` (alias `fs_write`) | kiro `fs_write` does targeted string-replace edits. |
+| `Write` | `write` (alias `fs_write`) | Create or overwrite a file. |
+| `NotebookEdit` | `write` | Edit notebook cells as text. |
+| `Bash` | `shell` (alias `execute_bash`) | Run a shell command. |
+| `Task` / "dispatch a subagent" | `subagent` tool — name the target agent in the task | Orchestrator needs `subagent` in its `tools`; delegates run concurrently (≤ 4). NOT the same as `/agent <name>`, which *switches the current chat* to that agent. See `docs/agents-guide.md`. |
+| `Skill` / "invoke the X skill" | `read` the skill's `SKILL.md` / `skill://…` resource | kiro has no `Skill` tool; load a skill by reading its `SKILL.md`. `/<x>` only works for files installed as `inclusion: manual` steering — these references are not. |
 | `TodoWrite` | *(no native tool)* | Track tasks as `- [ ]` checkboxes in the plan file under `docs/superpowers/plans/`. |
-| `WebFetch` / `WebSearch` | `@web` (web tool) | Fetch or search the web. |
+| `WebFetch` / `WebSearch` | `web` | Fetch or search the web. |
 | `SlashCommand` | `/<prompt-or-steering-name>` | kiro reusable prompts (`@name`) and manual steering (`/name`). |
 | `AskUserQuestion` | plain chat question | Ask the user inline; kiro has no structured-options tool. |
 | git via `Bash` | `@git` tool family | kiro exposes git as an MCP-style tool family; plain `execute_bash git …` also works. |

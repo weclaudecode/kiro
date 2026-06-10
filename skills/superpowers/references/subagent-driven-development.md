@@ -47,11 +47,13 @@ implementer "retry" without telling it what to change.
 
 ## kiro adaptation
 
-- `Task` → kiro `subagent` tool, invoked as `/agent <name>` or via the
-  `subagent` tool's ad-hoc form. Point implementer/reviewer subagents at real
-  agent configs in `.kiro/agents/` — they inherit that agent's
-  `tools`/`toolsSettings`/`allowedTools` (so a read-only reviewer stays
-  read-only). See `docs/agents-guide.md`.
+- `Task` → kiro `subagent` tool: your orchestrator agent must have `subagent`
+  in its `tools`, then you dispatch by **naming the target agent in the task**
+  ("use the `mr-reviewer` to check this diff"). This is not `/agent <name>`,
+  which switches your own chat to that agent. Point implementer/reviewer
+  subagents at real agent configs in `.kiro/agents/` — they inherit that
+  agent's `tools`/`toolsSettings`/`allowedTools` (so a read-only reviewer
+  stays read-only). See `docs/agents-guide.md`.
 - Up to **four** subagents run concurrently (kiro CLI ≥ 1.23).
 - There is no Claude Code "general-purpose" agent type — reference a catalog
   agent (e.g. a reviewer) or describe the subagent's role explicitly.
