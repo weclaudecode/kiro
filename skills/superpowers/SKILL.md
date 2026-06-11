@@ -1,92 +1,81 @@
 ---
 name: superpowers
-description: Use when starting development work of any size — a disciplined software-development workflow (brainstorm → plan → worktree → TDD → review → finish) ported from obra/superpowers for kiro. Establishes how to find and apply the workflow skills, and translates Claude Code tool names to kiro equivalents.
+description: Use when starting any non-trivial build, fix, or refactor — runs a disciplined workflow (brainstorm → worktree → plan → execute → TDD → review → finish) ported from obra/superpowers. Loads each workflow stage on demand and translates Claude Code tool names to kiro verbs.
 ---
 
 # Superpowers (kiro port)
 
-## Overview
+You are the orchestrator. When this skill loads, drive the work through the
+stages below — refine and plan before coding, build each change test-first,
+review against the plan, finish the branch deliberately. Don't jump straight
+to code.
 
-Superpowers is a complete software-development methodology for coding agents,
-built from a set of composable workflow skills. It keeps you from jumping
-straight to code: you refine the idea, plan it, isolate the work, drive it
-test-first, review against the plan, and finish the branch deliberately.
+## Do this first, once per session
 
-This is a port of [obra/superpowers](https://github.com/obra/superpowers)
-(MIT) adapted for the **kiro CLI**. The original uses Claude Code tool names;
-the `superpowers-tools` steering file holds the translation table. Read it
-once at the start of a session, then map every `Read`/`Edit`/`Bash`/`Task`/
-`Skill` reference in these skills to its kiro verb (`fs_read`/`fs_write`/
-`execute_bash`/`subagent`/read-the-`SKILL.md`).
+1. **Read `.kiro/steering/superpowers-tools.md`.** The reference files below
+   use Claude Code tool names (`Read`, `Edit`, `Bash`, `Task`, `Skill`, …).
+   That steering file maps each to its kiro verb (`read`, `write`, `shell`,
+   `subagent`, read-the-`SKILL.md`). Apply the mapping whenever a reference
+   names a Claude Code tool. (It loads automatically when installed, but read
+   it if it isn't already in context.)
+2. **Honor precedence.** These workflows override your default behavior, but
+   **user instructions and steering files win.** If the user or a steering
+   file says "no TDD here," follow that.
 
-## When to Use
+## How to run a stage
 
-Reach for the superpowers workflow whenever you are building, fixing, or
-changing real software — a feature, a bug fix, a refactor. The bigger or
-fuzzier the task, the more of the workflow you use. Trivial one-liners can
-skip straight to TDD.
-
-When NOT to use: throwaway prototypes, generated code, or pure config edits —
-though even then the TDD and verification skills usually still apply.
-
-## How to use these skills in kiro
-
-kiro has no `Skill` tool. Each workflow lives as a reference file in this
-bundle. To "invoke a skill," **read the file with `fs_read`** and follow it
-directly:
+kiro has no `Skill` tool. To "use" a workflow skill, **`read` its reference
+file and follow it as written** — then announce it ("Using the writing-plans
+skill…") so the active workflow is visible. Load a stage only when you reach
+it; do not preload them all.
 
 ```
-.kiro/skills/superpowers/references/<skill-name>.md
+.kiro/skills/superpowers/references/<stage>.md
 ```
 
-Announce which skill you are using ("I'm using the writing-plans skill…") so
-the active workflow is visible. Process skills override default behavior, but
-**user instructions and steering files always take precedence** — if a
-steering file or the user says "no TDD here," follow that.
+## Run these stages in order
 
-## The core workflow
-
-Run these in order for a typical feature. Each links to its reference file.
-
-| Stage | Skill | Read |
+| When | Stage | Read |
 |---|---|---|
-| 1. Refine the idea | **brainstorming** | `references/brainstorming.md` |
-| 2. Isolate the work | **using-git-worktrees** | `references/using-git-worktrees.md` |
-| 3. Plan it | **writing-plans** | `references/writing-plans.md` |
-| 4a. Execute (delegated) | **subagent-driven-development** | `references/subagent-driven-development.md` |
-| 4b. Execute (inline) | **executing-plans** | `references/executing-plans.md` |
-| 5. Build each task | **test-driven-development** | `references/test-driven-development.md` |
-| (when stuck) | **systematic-debugging** | `references/systematic-debugging.md` |
-| 6. Review | **requesting-code-review** / **receiving-code-review** | `references/requesting-code-review.md`, `references/receiving-code-review.md` |
-| 7. Finish | **finishing-a-development-branch** | `references/finishing-a-development-branch.md` |
-| Before "done" | **verification-before-completion** | `references/verification-before-completion.md` |
+| Goal is fuzzy → align on what/why | **brainstorming** | `references/brainstorming.md` |
+| Before touching code → isolate work | **using-git-worktrees** | `references/using-git-worktrees.md` |
+| Have a design → write the plan | **writing-plans** | `references/writing-plans.md` |
+| Execute the plan (delegated) | **subagent-driven-development** | `references/subagent-driven-development.md` |
+| Execute the plan (inline) | **executing-plans** | `references/executing-plans.md` |
+| Build each task | **test-driven-development** | `references/test-driven-development.md` |
+| A test/behavior is failing | **systematic-debugging** | `references/systematic-debugging.md` |
+| At each checkpoint | **requesting-code-review** + **receiving-code-review** | `references/requesting-code-review.md`, `references/receiving-code-review.md` |
+| Before claiming "done" | **verification-before-completion** | `references/verification-before-completion.md` |
+| Work is complete | **finishing-a-development-branch** | `references/finishing-a-development-branch.md` |
 
-## Skill priority
+Skip stages that don't apply — a trivial one-liner can go straight to TDD —
+but never skip TDD, review at major checkpoints, or verification.
 
-When several skills could apply:
+## When multiple skills apply
 
-1. **Process skills first** (brainstorming, systematic-debugging) — they
-   decide *how* to approach the task.
-2. **Implementation skills second** (the stack skills in this catalog:
-   `python-lambda`, `terraform-aws`, `kubernetes-eks`, …) — they guide
-   *execution*.
+1. **Process skills first** — brainstorming / systematic-debugging decide
+   *how* to approach the task.
+2. **Implementation skills second** — the stack skills in this catalog
+   (`python-lambda`, `terraform-aws`, `kubernetes-eks`, …) guide *execution*.
 
 "Let's build X" → brainstorm first, then the relevant stack skill.
 "Fix this bug" → systematic-debugging first, then the domain skill.
 
-## Skill types
+## Skill discipline
 
-- **Rigid** (TDD, systematic-debugging): follow exactly. Don't adapt away the
-  discipline.
-- **Flexible** (brainstorming, planning): adapt the principles to context.
+- **Rigid skills** (TDD, systematic-debugging): follow exactly — don't adapt
+  away the discipline.
+- **Flexible skills** (brainstorming, planning): adapt the principles to
+  context.
 
-## Authoring new skills
+## Don'ts
 
-This catalog already ships `skill-creator` for scaffolding and tuning kiro
-skills — use that rather than the original's `writing-skills` skill.
+- Don't write production code before a failing test (see TDD).
+- Don't skip the two review passes in subagent-driven work.
+- Don't claim "done" without running it and reading the output.
+- Don't preload every reference — load each stage when you reach it.
 
-## Attribution
-
-Ported from obra/superpowers (MIT License). Workflow content adapted; tool
-names and install model changed for kiro. See `references/` for per-skill
-ports and `steering/superpowers-tools.md` for the tool mapping.
+---
+To author *new* kiro skills, use the `skill-creator` skill, not this bundle.
+Ported from [obra/superpowers](https://github.com/obra/superpowers) (MIT);
+workflow content adapted and tool names mapped for kiro.
