@@ -20,7 +20,13 @@
 # Replace the placeholder groups below with points harvested from THIS
 # repo's conventions. Delete groups you don't need. Keep each group to a
 # few concrete, diff-checkable hints. See the example files in
-# ./examples/ for stack-specific starting points.
+# ./examples/ for stack-specific starting points, and
+# ../references/real-world-example.md for techniques from GitLab's own file.
+#
+# References for THIS project (link your own guideline docs so groups can
+# cite a canonical source — e.g. CONTRIBUTING, style guide, ADRs):
+#   - <link to your contributing / code review guide>
+#   - <link to your architecture / migration / API guidelines>
 
 instructions:
   # Universal points — applied to every changed file (no fileFilters).
@@ -53,3 +59,18 @@ instructions:
       1. Check that tests cover the risky/edge paths, not only the happy path.
       2. Flag over-mocking that makes a test assert on mocks instead of behavior.
       3. Prefer clear assertions with meaningful failure messages.
+
+  # A process/architecture group — scope to the files that trigger a workflow
+  # rule your team polices by hand (migrations, feature flags, public API...).
+  # Note the "For <situation>: ..." conditional scoping and the Ask:/Remind:
+  # pattern (pose a question / attach a doc link). Replace or delete.
+  - name: Database Migrations
+    fileFilters:
+      - "**/migrations/**"
+      - "db/migrate/**"
+    instructions: |
+      1. Check that each migration is reversible or has an explicit, correct rollback.
+      2. Flag schema changes that lock a large table without a batched strategy.
+      3. For a column added with a foreign key to a pre-existing table:
+         - Check that an index exists or is being added for the FK column.
+         - Ask: "What is the current and projected size of this table?"

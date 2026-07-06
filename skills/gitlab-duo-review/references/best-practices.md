@@ -74,6 +74,48 @@ someone who has never seen the codebase.
 - **Order by importance.** Put the points you care most about first; the
   guidance notes emphasis helps.
 
+## Patterns from production instruction files
+
+These techniques come from GitLab's own large, battle-tested
+`mr-review-instructions.yaml` — dissected in
+`real-world-example.md`. They scale a file past a handful of
+language groups without losing focus.
+
+- **Group by concern and process, not only language.** The
+  highest-value groups police a *workflow or architectural rule* the team
+  enforces by hand: database migrations, feature-flag removal, public API
+  changes, telemetry/event definitions, i18n, changelog rules. After you
+  cover each language, ask "what do we have a runbook or wiki page for that
+  reviewers police manually?" and give each its own scoped group. See
+  `assets/examples/process-and-architecture.yaml`.
+- **Use the Ask / Remind / Suggest pattern.** Beyond flat checks, tell the
+  reviewer to pose a *question to the author* (`Ask: "What is the projected
+  size of this table?"`) or attach a canonical doc (`Remind: "See <link>"`).
+  Use `Ask:` when the answer needs human context the model can't infer, and
+  name the escape hatch honestly ("the reviewer can't determine X from code
+  alone — routing to human review") instead of pretending a hint enforces it.
+- **Condition points on what the diff does.** Scope sub-points inside a
+  group with `For <situation>: …` or `When this MR touches <X>, check <Y>`.
+  The reviewer then only weighs the sub-points relevant to the actual change,
+  so one group can cover a rich domain without nagging on every file.
+- **Split a domain into source / heuristics / tests.** A big area like
+  authentication reads better as three scoped groups (the source files, the
+  policy/reasoning heuristics, and the `*_spec`/test files) than one
+  sprawling group — each carries tightly relevant points.
+- **Be precise in `fileFilters`.** Pin single files
+  (`app/controllers/sessions_controller.rb`) and use filename wildcards
+  (`*two_factor*.rb`, `doorkeeper*.rb`) when only certain files matter. For a
+  mirrored monorepo, list both trees (e.g. `app/**` and `ee/app/**`).
+- **Open with a header + references.** A comment block at the top linking
+  your own guideline docs (contributing guide, style guide, ADRs, migration
+  rules) documents provenance for the next maintainer and gives groups a
+  canonical source to cite. The starter template shows the shape.
+
+Directive verbs — **Ensure / Verify / Check / Flag / Ask / Remind** — are
+fine: they tell the *reviewer* to run a check. What to avoid is absolute
+phrasing aimed at the *code* (**always / never / must / mandatory**), which
+promises enforcement the feature can't deliver.
+
 ## Start simple, then tune
 
 1. Ship a small file: an "All Files" group plus one group for your primary

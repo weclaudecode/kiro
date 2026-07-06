@@ -1,0 +1,75 @@
+# Example instruction groups: process & architecture (not language-specific)
+#
+# The highest-value groups often police a WORKFLOW or architectural rule the
+# team enforces by hand — migrations, feature flags, telemetry, i18n, public
+# API changes — rather than a language. Distilled (stack-neutral) from
+# GitLab's production file; see references/real-world-example.md.
+#
+# Note the Ask:/Remind: pattern (pose a question / attach a doc link) and the
+# "For <situation>: ..." conditional scoping inside a group. Adapt paths and
+# doc URLs to your repo.
+
+instructions:
+  - name: Database Migrations
+    fileFilters:
+      - "**/migrations/**"
+      - "db/migrate/**"
+      - "!**/*.test.*"
+    instructions: |
+      1. Check that each migration is reversible, or has an explicit, correct down/rollback.
+      2. Flag schema changes that lock a large table without a batched/online strategy.
+      3. For a column added with a foreign key to a pre-existing table:
+         - Check that an index exists or is being added for the FK column.
+         - Ask: "What is the current and projected size of this table?"
+      4. For a dropped index:
+         - Remind: "Before removing an index, verify other indexes cover the
+           queries, and confirm it is unused in production."
+      5. Check that any data backfill is idempotent and safe to re-run.
+
+  - name: Feature Flag Changes
+    fileFilters:
+      - "**/feature_flags/**"
+      - "config/feature_flags/**"
+      - "**/*.ts"
+      - "**/*.js"
+    instructions: |
+      1. When an MR REMOVES a feature flag, check that ALL references are gone —
+         backend guards, frontend checks, and test stubs — not just the definition.
+      2. For a flag guarding a data write or a shared state transition:
+         - Ask: "Is the old code path safe to remove for nodes still running the
+           previous version during a rolling upgrade?"
+      3. Check that a new flag has an owner and a rollout/removal plan, not an
+         indefinite permanent branch.
+
+  - name: Public API Changes
+    fileFilters:
+      - "api/**"
+      - "**/openapi*.y?ml"
+      - "**/*.proto"
+    instructions: |
+      1. Flag breaking changes to request/response shapes, status codes, or
+         removed fields without a version bump or deprecation path.
+      2. Check that new endpoints enforce authentication and authorization
+         server-side, and validate all inputs.
+      3. Remind: "Update the API reference/changelog for any user-visible change."
+
+  - name: Telemetry & Analytics
+    fileFilters:
+      - "**/events/**/*.y?ml"
+      - "**/metrics/**/*.y?ml"
+    instructions: |
+      1. Check that new event/metric definitions have an owner, a clear
+         description, and the required category fields.
+      2. Flag events that could capture PII or secrets in their properties.
+      3. Prefer reusing an existing event over adding a near-duplicate.
+
+  - name: Internationalization
+    fileFilters:
+      - "**/locale/**"
+      - "**/*.pot"
+      - "**/i18n/**"
+    instructions: |
+      1. Flag user-facing strings added in code without being wrapped for
+         translation.
+      2. Check that pluralization and interpolation use the i18n helpers,
+         not string concatenation.

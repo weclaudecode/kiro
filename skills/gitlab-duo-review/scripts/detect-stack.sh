@@ -106,6 +106,30 @@ fi
 has '(^|/)\.github/workflows/' && mark "GitHub Actions workflows"
 has '(^|/)Dockerfile|\.dockerfile$' && { mark "Dockerfile(s)"; groups+=("Dockerfiles|\"**/Dockerfile\", \"**/*.dockerfile\""); }
 
+# --- Process / architecture markers ----------------------------------------
+# The highest-value groups often police a WORKFLOW rule, not a language.
+# See references/real-world-example.md and assets/examples/process-and-architecture.yaml.
+if has '(^|/)(db/migrate|db/post_migrate|migrations)/'; then
+  mark "Database migrations directory"
+  groups+=("Database Migrations|\"**/migrations/**\", \"db/migrate/**\", \"db/post_migrate/**\"")
+fi
+if has '(^|/)(config/)?feature_flags?/'; then
+  mark "Feature flag definitions"
+  groups+=("Feature Flag Changes|\"**/feature_flags/**\", \"config/feature_flags/**\"")
+fi
+if has '(^|/)(openapi|swagger)|\.proto$|(^|/)api/'; then
+  mark "Public API surface (OpenAPI/proto/api dir)"
+  groups+=("Public API Changes|\"api/**\", \"**/openapi*.y?ml\", \"**/*.proto\"")
+fi
+if has '(^|/)locale/|\.pot$|(^|/)i18n/'; then
+  mark "Internationalization files"
+  groups+=("Internationalization|\"**/locale/**\", \"**/*.pot\", \"**/i18n/**\"")
+fi
+if has '(^|/)config/(events|metrics)/|(^|/)(events|metrics)/.*\.ya?ml$'; then
+  mark "Telemetry / analytics definitions"
+  groups+=("Telemetry & Analytics|\"**/events/**/*.y?ml\", \"**/metrics/**/*.y?ml\"")
+fi
+
 # --- Existing conventions to read ------------------------------------------
 echo
 echo "## Convention files to read before authoring"

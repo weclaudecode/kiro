@@ -67,13 +67,21 @@ written without reading the repo are generic and low-value.
    layout and coverage expectation, the changelog/commit rules. Skip
    anything a formatter or linter already enforces in CI — Duo should
    review what tools *cannot* mechanically catch.
-3. **Group by file scope.** One instruction group per coherent area
-   (a language, a directory, tests, IaC, pipeline files). Each group gets
-   `fileFilters` globs so its guidance only reaches relevant files. Put
-   truly universal points in an unfiltered "All Files" group.
+3. **Group by file scope — and by concern.** One instruction group per
+   coherent area. Cover each language, but the highest-value groups often
+   police a *workflow or architectural rule* the team enforces by hand —
+   database migrations, feature-flag removal, public API changes,
+   telemetry, i18n — scoped to the files that trigger it. Each group gets
+   `fileFilters` globs (pin single files or use filename wildcards where
+   only certain files matter); put truly universal points in an unfiltered
+   "All Files" group. See `references/real-world-example.md` for the
+   techniques behind a large production file.
 4. **Phrase as hints.** Number the points. Write them as guidance
    ("prefer", "check that", "flag when") — not mandates ("always",
-   "never", "must"). See `references/best-practices.md`.
+   "never", "must"). Where a check needs author context the model can't
+   see, use the `Ask:`/`Remind:` pattern (pose a question, attach a doc
+   link) and condition sub-points on the diff (`For <situation>: …`). See
+   `references/best-practices.md`.
 5. **Validate and place.** Run `scripts/validate-instructions.sh` to
    confirm the schema and globs parse, then write the file to
    `.gitlab/duo/mr-review-instructions.yaml` at the repo root. Open an MR
@@ -112,6 +120,7 @@ graft in the example groups that match the project's stack.
 | `assets/examples/gitlab-ci.yaml` | `.gitlab-ci.yml` pipelines (OIDC vs. static keys, image pins, rules) |
 | `assets/examples/kubernetes.yaml` | K8s / EKS manifests (limits, probes, securityContext, IRSA) |
 | `assets/examples/frontend-ts.yaml` | TypeScript / React / Node frontends (types, a11y, state, tests) |
+| `assets/examples/process-and-architecture.yaml` | Concern/process groups (DB migrations, feature flags, public API, telemetry, i18n) — the `Ask:`/`Remind:` and conditional-scoping patterns |
 | `assets/examples/security-baseline.yaml` | Cross-cutting security hints (secrets, input validation, authz) — good group-level template content |
 
 ## References
@@ -121,6 +130,7 @@ graft in the example groups that match the project's stack.
 | `references/instruction-format.md` | Full YAML schema, field semantics, glob syntax (incl. `!` negation and `{a,b}` unions), project/group/instance levels, version history, comment format |
 | `references/best-practices.md` | Writing effective hints, what to leave to CI, phrasing do/don't, group granularity, the guidance-not-policy limitation, common failure modes |
 | `references/review-workflow.md` | How Duo non-agentic review works: requesting it, what it can see, automatic reviews, large-MR handling, model selection, and how custom instructions combine across levels |
+| `references/real-world-example.md` | Techniques distilled from GitLab's own large production `mr-review-instructions.yaml` (concern/process groups, `Ask:`/`Remind:`, conditional scoping, concern-splitting, precise filters, header/references) with a link to the source |
 
 ## Scripts
 
