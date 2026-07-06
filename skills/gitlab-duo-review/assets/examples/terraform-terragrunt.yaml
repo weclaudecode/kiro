@@ -1,0 +1,34 @@
+# Example instruction groups: Terraform + Terragrunt (AWS)
+# Enforce security/compliance in CI (checkov/tfsec/OPA) — these are hints
+# for the judgment calls those tools miss.
+
+instructions:
+  - name: Terraform
+    fileFilters:
+      - "**/*.tf"
+      - "!**/.terraform/**"
+    instructions: |
+      1. Flag IAM policies with `Action: "*"` or `Resource: "*"` where the
+         needed actions/ARNs could be enumerated; prefer least privilege.
+      2. Check for changes that force destroy-and-recreate of stateful
+         resources (renames, changed `name`/identifiers) and call out the
+         data-loss risk.
+      3. Point out new resources missing encryption at rest, or public
+         exposure (open security groups, public S3/RDS) introduced by the diff.
+      4. Prefer variable `validation` blocks and typed variables over bare
+         `string`; flag inputs that could silently accept bad values.
+      5. Check that new resources carry the standard tags and sensible
+         log-retention where applicable.
+
+  - name: Terragrunt
+    fileFilters:
+      - "**/terragrunt.hcl"
+      - "**/*.hcl"
+      - "!**/.terragrunt-cache/**"
+    instructions: |
+      1. Check that `dependency` blocks and `mock_outputs` are correct and
+         won't mask a real missing dependency at apply time.
+      2. Flag hardcoded account IDs, regions, or ARNs that should come from
+         inputs / a shared config include.
+      3. Prefer `include` inheritance over copy-pasted backend/provider
+         blocks across environments.

@@ -1,0 +1,35 @@
+# Example instruction groups: Python / AWS Lambda (Powertools stack)
+# Graft the relevant groups into .gitlab/duo/mr-review-instructions.yaml.
+# Points here target judgment calls; leave black/ruff/mypy to CI.
+
+instructions:
+  - name: Python Lambda Handlers
+    fileFilters:
+      - "**/*.py"
+      - "!**/*_test.py"
+      - "!**/test_*.py"
+      - "!tests/**/*"
+    instructions: |
+      1. Check that boto3 clients/resources are created at MODULE scope, not
+         inside the handler, so they are reused across warm invocations.
+      2. Flag broad `except Exception` that swallows the error without logging
+         context or re-raising; failures should surface (or route to a DLQ).
+      3. Prefer AWS Lambda Powertools for logging, tracing, and metrics over
+         ad-hoc `print`/`logging` setup; check the logger is structured.
+      4. Point out secrets or config read from hardcoded values instead of
+         environment variables / Parameter Store / Secrets Manager.
+      5. Check that the handler validates the event shape before using it,
+         and returns a response matching the invoker's contract.
+      6. Flag unbounded retries or missing idempotency on at-least-once event
+         sources (SQS, EventBridge) where reprocessing could double-apply.
+
+  - name: Python Tests
+    fileFilters:
+      - "**/*_test.py"
+      - "**/test_*.py"
+      - "tests/**/*.py"
+    instructions: |
+      1. Check that error and edge cases are tested, not only the happy path.
+      2. Prefer moto or explicit fakes over patching so much that the test
+         only asserts on mocks rather than behavior.
+      3. Flag tests that assert nothing meaningful or duplicate coverage.

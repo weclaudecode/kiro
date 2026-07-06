@@ -38,6 +38,14 @@ This README is the index: what each skill does and when to reach for it. For the
 
 ---
 
+## gitlab-duo-review
+
+**What it does.** Configures GitLab Duo Code Review (the non-agentic reviewer) for a project by producing a tailored `.gitlab/duo/mr-review-instructions.yaml`. Works review-then-author: inventory the repo's languages, layout, and conventions (a `detect-stack.sh` helper seeds `fileFilters` globs), harvest the real review nits, then write scoped, per-area instruction groups phrased as hints. Ships an annotated starter template, stack-specific example groups (Python/Lambda, Terraform/Terragrunt, GitLab CI, Kubernetes, TypeScript, a security baseline), a validator that lints schema/globs/mandate-phrasing, and references for the YAML schema, glob syntax, group/instance-level templates, and the reviewer's guidance-not-policy limits.
+
+**When to use.** Standing up Duo custom review instructions on a repo for the first time, capturing repeated manual review comments as Duo hints, scoping different guidance per language/area in a monorepo, setting a shared group/instance-level baseline, or auditing an existing instructions file that has grown noisy or full of "always/never" mandates. Skip for enforceable gates (use `gitlab-pipeline` CI quality gates) and for the *agentic* Code Review Flow.
+
+---
+
 ## gitlab-pipeline
 
 **What it does.** Covers production GitLab CI/CD design on GitLab 17+ — `.gitlab-ci.yml` structure, `workflow:`/`rules:`, includes and templates, caching and artifacts, parallel and DAG jobs, environments, OIDC auth to AWS, multi-account deploys, secrets handling, and review apps.
@@ -120,6 +128,7 @@ Several skills assume context from others. Common chains:
 - `terragrunt-multi-account` → `terraform-aws` (module / HCL primitives) → `aws-solution-architect` (service selection)
 - `kubernetes-eks` → `terraform-aws` / `terragrunt-multi-account` (cluster + IRSA IaC) → `aws-solution-architect` (topology); `security-code-reviewer` (manifest review)
 - `automation-solutions` → `security-code-reviewer` (the agents it runs in hooks) + `gitlab-pipeline` (pipeline-troubleshooter context)
+- `gitlab-duo-review` → `gitlab-pipeline` (enforceable CI gates that hints must not replace) + `security-code-reviewer` (repeatable low-severity checks that make good Duo hints)
 - `powerpipe-reporting` → `steampipe` (query/connection layer) → `terragrunt-multi-account` (audit-role layout) + `gitlab-pipeline` (CI publish job)
 
 ## Adding a new skill

@@ -1,0 +1,23 @@
+# Example instruction group: cross-cutting security baseline
+#
+# Good candidate for a GROUP- or INSTANCE-level template project, so every
+# repo inherits it. Keep it short and universal — remember these are hints
+# that COMPLEMENT enforced controls (SAST/SCA, secret scanning,
+# policy-as-code), never a substitute for them.
+
+instructions:
+  - name: Security Baseline
+    instructions: |
+      1. Flag secrets, API keys, tokens, or credentials committed in code,
+         config, or test fixtures; they belong in a secrets manager.
+      2. Point out untrusted input reaching a sink without validation:
+         SQL/command/template injection, path traversal, SSRF, unsafe
+         deserialization.
+      3. Check that authorization is enforced on the server for every new
+         endpoint/handler, not just in the UI, and that object access is
+         scoped to the caller (no IDOR).
+      4. Flag disabled TLS verification, weak/legacy crypto, or `alg: none`
+         style JWT handling.
+      5. Point out verbose error responses or logs that leak stack traces,
+         secrets, or PII to untrusted callers.
+      6. Prefer least privilege for any new IAM/role/permission introduced.

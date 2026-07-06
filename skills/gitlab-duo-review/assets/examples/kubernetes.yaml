@@ -1,0 +1,24 @@
+# Example instruction groups: Kubernetes / EKS manifests
+# Narrow the globs to your manifest layout (or Helm templates / Kustomize
+# overlays) so these don't fire on unrelated YAML.
+
+instructions:
+  - name: Kubernetes Manifests
+    fileFilters:
+      - "k8s/**/*.yaml"
+      - "manifests/**/*.yaml"
+      - "**/*.k8s.yaml"
+    instructions: |
+      1. Flag containers without resource `requests` and `limits`, or with
+         limits far above requests (noisy-neighbor / OOM risk).
+      2. Check for `livenessProbe` and `readinessProbe`; flag workloads that
+         omit them or use a liveness probe that would restart-loop under load.
+      3. Point out `securityContext` gaps: running as root, missing
+         `readOnlyRootFilesystem`, `allowPrivilegeEscalation: true`,
+         or added Linux capabilities.
+      4. Prefer IRSA (a ServiceAccount annotated with an IAM role) over
+         mounting static AWS credentials for pod AWS access.
+      5. Flag `image:` tags of `:latest` or unpinned; prefer a version tag
+         or digest.
+      6. Check that Deployments set a PodDisruptionBudget and sensible
+         `topologySpreadConstraints` for availability-sensitive workloads.

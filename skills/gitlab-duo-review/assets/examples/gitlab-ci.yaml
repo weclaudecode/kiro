@@ -1,0 +1,20 @@
+# Example instruction groups: GitLab CI/CD pipeline files
+
+instructions:
+  - name: GitLab CI Pipelines
+    fileFilters:
+      - ".gitlab-ci.yml"
+      - ".gitlab/ci/**/*.yml"
+      - "**/*.gitlab-ci.yml"
+    instructions: |
+      1. Flag AWS (or other cloud) access keys stored as CI/CD variables;
+         prefer OIDC with `id_tokens` and `assume-role-with-web-identity`.
+      2. Point out container images pinned to `:latest` or unpinned; prefer
+         a version tag or digest.
+      3. Check for deprecated `only`/`except`; prefer `rules:` and a
+         `workflow:rules:` block to avoid duplicate MR pipelines.
+      4. Flag `echo $SECRET`-style debugging that could leak secrets to logs.
+      5. Check that production/apply jobs have a manual gate and a
+         `resource_group:` to serialize deploys.
+      6. Point out long-running test jobs missing `interruptible: true`
+         outside deploy stages.

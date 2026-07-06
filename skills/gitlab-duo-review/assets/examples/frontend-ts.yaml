@@ -1,0 +1,33 @@
+# Example instruction groups: TypeScript / React / Node frontends
+# Leave prettier/eslint --fix rules to CI; these target design & correctness.
+
+instructions:
+  - name: TypeScript Source
+    fileFilters:
+      - "**/*.ts"
+      - "**/*.tsx"
+      - "!**/*.test.ts"
+      - "!**/*.test.tsx"
+      - "!**/*.spec.ts"
+      - "!**/*.stories.tsx"
+    instructions: |
+      1. Prefer precise types; flag `any` (and unchecked `as` casts) where a
+         real type would fit.
+      2. Point out `useEffect` hooks with missing/incorrect dependency arrays
+         or effects that should be derived state instead.
+      3. Flag state mutated in place rather than replaced immutably.
+      4. Check that promises are awaited or their rejections handled; flag
+         floating promises.
+      5. Point out user-facing components missing accessibility basics
+         (labels, roles, keyboard handling) where relevant.
+
+  - name: Frontend Tests
+    fileFilters:
+      - "**/*.test.ts"
+      - "**/*.test.tsx"
+      - "**/*.spec.ts"
+    instructions: |
+      1. Prefer testing behavior via the public component/API over asserting
+         on implementation details.
+      2. Check that async UI is awaited (findBy/waitFor) rather than raced.
+      3. Flag tests with no meaningful assertion.

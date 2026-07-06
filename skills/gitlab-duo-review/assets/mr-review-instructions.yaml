@@ -1,0 +1,55 @@
+# .gitlab/duo/mr-review-instructions.yaml
+#
+# Custom review instructions for GitLab Duo Code Review (non-agentic).
+# Place this file at the repository root. Duo APPENDS these groups to its
+# built-in review criteria and applies each group only to files matching
+# its fileFilters. Instructions are GUIDANCE, not enforced policy — put
+# anything that must be enforced into CI (SAST/SCA, policy-as-code,
+# required approvals), not here.
+#
+# Requires GitLab 18.1+ with the GitLab Duo Enterprise add-on.
+#
+# glob cheatsheet:
+#   **/*.py            any Python file, any directory
+#   *.py               Python files in the repo ROOT only
+#   src/**/*.py        Python under src/ (recursive)
+#   "!**/*_test.py"    EXCLUDE test files (leading ! negates)
+#   "**/*.{ts,tsx}"    union of extensions (GitLab 19.1+)
+# Quote any pattern that starts with * or ! so YAML parses it as a string.
+#
+# Replace the placeholder groups below with points harvested from THIS
+# repo's conventions. Delete groups you don't need. Keep each group to a
+# few concrete, diff-checkable hints. See the example files in
+# ./examples/ for stack-specific starting points.
+
+instructions:
+  # Universal points — applied to every changed file (no fileFilters).
+  - name: All Files
+    instructions: |
+      1. Explain the "why" behind each suggestion so the author can learn from it.
+      2. Flag names that are technically valid but misleading about what the code does.
+      3. Point out logic that is non-obvious and lacks a brief explanatory comment.
+      4. Do not repeat issues a formatter or linter would already catch in CI.
+
+  # Primary source language — replace globs and points for your stack.
+  - name: Source Code
+    fileFilters:
+      - "src/**/*"
+      - "!**/*.test.*"
+      - "!**/*.spec.*"
+    instructions: |
+      1. Check that error handling matches the failure mode, not just that it exists.
+      2. Prefer small, single-purpose functions; flag ones doing several unrelated things.
+      3. Point out public functions whose behavior does not match their doc comment.
+
+  # Tests get their own guidance.
+  - name: Tests
+    fileFilters:
+      - "**/*.test.*"
+      - "**/*.spec.*"
+      - "test/**/*"
+      - "tests/**/*"
+    instructions: |
+      1. Check that tests cover the risky/edge paths, not only the happy path.
+      2. Flag over-mocking that makes a test assert on mocks instead of behavior.
+      3. Prefer clear assertions with meaningful failure messages.

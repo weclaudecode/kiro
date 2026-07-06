@@ -18,6 +18,7 @@ Install one with `scripts/install.sh` (it lands in `~/.kiro/agents/` or
 | `security-auditor` | Security review of AWS IaC + Python (IAM, exposure, secrets) | `read`, `@git` | no |
 | `mr-reviewer` | Pre-merge diff review, emits JSONL findings | `read`, `@git` | no |
 | `gitlab-ci-engineer` | Builds/reviews `.gitlab-ci.yml` pipelines for AWS | `read`, `write`, `shell` | yes (prompts) |
+| `gitlab-duo-instructions-author` | Reviews a project and authors its GitLab Duo `.gitlab/duo/mr-review-instructions.yaml` | `read`, `write`, `shell` | yes (prompts, one file) |
 | `pipeline-troubleshooter` | Diagnoses a **pasted** CI trace, emits root-cause JSON (cron-friendly) | `read` | no |
 | `gitlab-ci-troubleshooter` | **Pulls** a failing pipeline's logs via `glab` and reports the root cause | `read`, `shell`, `@git` | no |
 | `powerpipe-report-author` | Authors/runs Powerpipe dashboards + benchmarks over Steampipe, per environment | `read`, `write`, `shell` | yes (prompts) |
@@ -194,6 +195,31 @@ report. It and every subagent are read-only — findings are proposed, never
 applied. If the installed CLI lacks subagent support it says so and falls
 back to recommending the specialists individually. See
 [`../docs/agents-guide.md`](../docs/agents-guide.md) → Subagents.
+
+## `gitlab-duo-instructions-author`
+
+Configures **GitLab Duo Code Review** (the non-agentic reviewer) for a
+repository by authoring its `.gitlab/duo/mr-review-instructions.yaml`. It
+works review-then-author: inventories the repo (languages, layout,
+existing conventions) with the `gitlab-duo-review` skill's read-only
+`detect-stack.sh`, asks for the team's manual review nits and workflows,
+drafts scoped per-area instruction groups phrased as hints, **proposes the
+file for confirmation**, and only then writes it — validating the result
+with `validate-instructions.sh`.
+
+It is the one author agent whose write surface is a **single file**: the
+prompt restricts it to `.gitlab/duo/mr-review-instructions.yaml` and never
+touches source, CI, or anything else. `allowedTools` is `["read"]` only
+(so `write` always prompts), and `toolsSettings.execute_bash` gates
+`shell` to the skill's read-only scripts plus read-only git — no
+`add|commit|push|checkout|reset`. Instructions it writes are **guidance,
+not enforced policy**; the agent says so and points enforcement at CI.
+
+### Loaded context
+
+- `skill://.kiro/skills/gitlab-duo-review/SKILL.md`
+- `file://.kiro/steering/gitops-workflow.md`
+- `file://.kiro/steering/secrets-handling.md`
 
 ## Conventions in one paragraph
 
