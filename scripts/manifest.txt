@@ -14,7 +14,7 @@ file|steering/lambda-conventions.md|steering/lambda-conventions.md
 file|steering/gitlab-ci-conventions.md|steering/gitlab-ci-conventions.md
 file|steering/kubernetes-conventions.md|steering/kubernetes-conventions.md
 file|steering/powerpipe-reporting.md|steering/powerpipe-reporting.md
-file|steering/superpowers-tools.md|steering/superpowers-tools.md
+file|steering/superpowers-bootstrap.md|steering/superpowers-bootstrap.md
 
 file|agents/terraform-reviewer.json|agents/terraform-reviewer.json
 file|agents/python-lambda-author.json|agents/python-lambda-author.json
@@ -57,4 +57,21 @@ dir|skills/powerpipe-reporting|skills/powerpipe-reporting
 dir|skills/terraform-aws|skills/terraform-aws
 dir|skills/terragrunt-multi-account|skills/terragrunt-multi-account
 dir|skills/skill-creator|skills/skill-creator
-dir|skills/superpowers|skills/superpowers
+
+# obra/superpowers (MIT), vendored verbatim. These 14 skills reference each
+# other by sibling path, and the bootstrap steering above is what makes them
+# trigger — install them as a set, not individually.
+dir|skills/using-superpowers|skills/using-superpowers
+dir|skills/brainstorming|skills/brainstorming
+dir|skills/dispatching-parallel-agents|skills/dispatching-parallel-agents
+dir|skills/executing-plans|skills/executing-plans
+dir|skills/finishing-a-development-branch|skills/finishing-a-development-branch
+dir|skills/receiving-code-review|skills/receiving-code-review
+dir|skills/requesting-code-review|skills/requesting-code-review
+dir|skills/subagent-driven-development|skills/subagent-driven-development
+dir|skills/systematic-debugging|skills/systematic-debugging
+dir|skills/test-driven-development|skills/test-driven-development
+dir|skills/using-git-worktrees|skills/using-git-worktrees
+dir|skills/verification-before-completion|skills/verification-before-completion
+dir|skills/writing-plans|skills/writing-plans
+dir|skills/writing-skills|skills/writing-skills
