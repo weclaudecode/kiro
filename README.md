@@ -28,7 +28,7 @@ cd ~/code/kiro
 | `hooks/` | IDE file-event hooks + a CLI snippet | `<project>/.kiro/hooks/` (IDE) / agent JSON (CLI) |
 | `mcp/` | `mcp.json` sample | `~/.kiro/settings/mcp.json` |
 | `settings/` | `cli.json` sample | `~/.kiro/settings/cli.json` |
-| `skills/` | Twelve stack/workflow skills + `superpowers` (a dev-methodology bundle ported from obra/superpowers) + `skill-creator` for authoring new skills | `~/.kiro/skills/<name>/` |
+| `skills/` | Twelve stack/workflow skills + `skill-creator` + the 14-skill superpowers bundle vendored verbatim from obra/superpowers (needs `steering/superpowers-bootstrap.md` to trigger) | `~/.kiro/skills/<name>/` |
 | `headless/` | GitLab CI job samples + a hardened non-interactive wrapper | reference (not installed) |
 | `scripts/` | `install.sh`, `list.sh`, `manifest.txt` | runs from this repo |
 
@@ -41,6 +41,7 @@ cd ~/code/kiro
 - [`docs/agents-guide.md`](docs/agents-guide.md) — kiro agent anatomy, `toolsSettings`, subagents
 - [`docs/mcp-guide.md`](docs/mcp-guide.md) — MCP setup & secret handling
 - [`docs/headless-guide.md`](docs/headless-guide.md) — non-interactive mode for CI/cron
+- [`docs/superpowers-compatibility.md`](docs/superpowers-compatibility.md) — what the obra/superpowers port needed to behave like it does on Claude Code
 - [`docs/specs/`](docs/specs/) — design docs for changes to this catalog
 
 ## Conventions in one paragraph
