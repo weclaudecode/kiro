@@ -41,6 +41,7 @@ cd ~/code/kiro
 - [`docs/agents-guide.md`](docs/agents-guide.md) — kiro agent anatomy, `toolsSettings`, subagents
 - [`docs/mcp-guide.md`](docs/mcp-guide.md) — MCP setup & secret handling
 - [`docs/headless-guide.md`](docs/headless-guide.md) — non-interactive mode for CI/cron
+- [`docs/superpowers-compatibility.md`](docs/superpowers-compatibility.md) — what the obra/superpowers port needed to behave like it does on Claude Code
 - [`docs/specs/`](docs/specs/) — design docs for changes to this catalog
 
 ## Conventions in one paragraph
