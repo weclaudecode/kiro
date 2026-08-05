@@ -115,14 +115,24 @@ Kiro has **no `Skill` tool**. Its blessed skill-loading mechanisms are:
    auto-registers as a slash command that force-loads it (CLI ≥ 2.1).
 3. **Reading `SKILL.md` with `read`** — the sanctioned fallback when a skill did
    not auto-activate, or when one skill tells you to use another
-   (`superpowers:writing-plans` → `read` `.kiro/skills/writing-plans/SKILL.md`).
+   (`superpowers:writing-plans` → `read` the `writing-plans` `SKILL.md`).
 
 `using-superpowers` says never to read skill files manually *instead of* your
 platform's mechanism. On Kiro, reading `SKILL.md` **is** one of the platform's
 mechanisms — it honors that rule, it does not break it.
 
-Cross-skill references written as `superpowers:<skill-name>` resolve to
-`.kiro/skills/<skill-name>/SKILL.md`. Relative links inside a skill
+**Skills live in two scopes; check both.** A cross-skill reference written as
+`superpowers:<skill-name>` resolves to whichever of these exists:
+
+```
+.kiro/skills/<skill-name>/SKILL.md      # workspace — wins on a name collision
+~/.kiro/skills/<skill-name>/SKILL.md    # global — the catalog installer's default scope
+```
+
+Do not conclude a skill is missing because the workspace path is absent; this
+catalog installs globally by default, so the `~/.kiro` path is the common case.
+
+Relative links inside a skill
 (`./implementer-prompt.md`, `../requesting-code-review/code-reviewer.md`,
 `scripts/review-package`) resolve against the skill's own directory — the layout
 is preserved from upstream, so follow them as written.
@@ -143,12 +153,14 @@ lists them:
 by describing the task and naming the target agent — this is **not** `/agent
 <name>`, which switches your own chat session to that agent.
 
-- **`general-purpose` does not exist as a type.** Where a skill says
-  "dispatch a `general-purpose` subagent", use Kiro's **default subagent**: it
-  has the same built-in tools as the main agent (`read`, `write`, `shell`,
-  `web_search`, `web_fetch`, plus configured MCP tools). Point the subagent at a
-  named agent in `.kiro/agents/` only when you want that agent's narrower tools
-  and permissions — e.g. a read-only reviewer.
+- **"Dispatch a `general-purpose` subagent" maps directly.** Kiro ships two
+  internal subagents it uses automatically: *context gathering*, and *general
+  purpose* — "handles parallelized tasks of any kind using the default agent
+  configuration". That default subagent has the same built-in tools as the main
+  agent (`read`, `write`, `shell`, `web_search`, `web_fetch`, plus configured MCP
+  tools), so it is the right target wherever a skill asks for a general-purpose
+  subagent. Name an agent from `.kiro/agents/` instead only when you want that
+  agent's narrower tools and permissions — e.g. a read-only reviewer.
 - Subagent selection is **description-driven**: the `description` field of an
   agent config decides whether it gets picked. Name *when to delegate* in it.
 - Subagents get isolated context and run in parallel; the parent whitelists them
@@ -163,6 +175,20 @@ by describing the task and naming the target agent — this is **not** `/agent
 - If a subagent needs to be re-driven after a review (the
   `subagent-driven-development` fix loop), dispatch a fresh subagent carrying the
   task brief, the report file, and the findings.
+
+## Skill text that needs a Kiro correction
+
+Skill bodies are vendored verbatim from upstream and predate Kiro support. Two
+places where the text is stale for this harness:
+
+- **`executing-plans` says subagents exist on "Claude Code, Codex CLI, Codex App,
+  Copilot CLI, and Gemini CLI".** Kiro belongs on that list — `subagent` is a
+  built-in tool here. Read that note as *including* Kiro: when the parent agent
+  has `subagent` in its `tools`, use `superpowers:subagent-driven-development`
+  rather than executing the plan inline. Fall back to `executing-plans` only when
+  the active agent genuinely lacks the `subagent` tool.
+- **`using-superpowers`'s "Platform Adaptation" list** points at other harnesses'
+  reference files. On Kiro, this file is the one that applies.
 
 ## Steering, and where the bootstrap lives
 

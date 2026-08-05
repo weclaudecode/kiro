@@ -74,6 +74,12 @@ SEPARATOR
 FOOTER
 }
 
+case "${1:-}" in
+  ""|--check) ;;
+  -h|--help) sed -n '2,13p' "$0"; exit 0 ;;
+  *) echo "unknown argument: $1 (expected --check or no argument)" >&2; exit 2 ;;
+esac
+
 if [[ "${1:-}" == "--check" ]]; then
   if diff -q <(render) "$OUT" >/dev/null 2>&1; then
     echo "steering/superpowers-bootstrap.md is up to date"

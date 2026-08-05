@@ -7,6 +7,16 @@ into the conversation.
 
 ## Inclusion modes
 
+> **CLI caveat — inclusion modes are IDE-only.** Kiro's docs are explicit: *"On
+> Kiro CLI, inclusion modes are not currently supported. All steering files in
+> the `.kiro/steering/` directory are loaded automatically."* Under `kiro-cli`
+> every frontmatter mode below behaves as `always`. Budget context accordingly:
+> install `fileMatch` files at project scope where they're relevant rather than
+> globally, and treat `manual` files as always-on. The modes work as documented
+> in the Kiro IDE. (This unconditional loading is also what makes
+> `superpowers-bootstrap.md` a reliable session-start bootstrap — see
+> `superpowers-compatibility.md`.)
+
 ```yaml
 ---
 inclusion: always         # default — load every interaction

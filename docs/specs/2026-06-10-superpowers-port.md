@@ -61,8 +61,10 @@ bootstrap cannot trade away.
   helper script (`scripts/review-package`, `scripts/sdd-workspace`,
   `scripts/task-brief`, `find-polluter.sh`, the brainstorming visual companion)
   and technique file. Upstream's sibling layout is preserved, so relative links
-  (`../requesting-code-review/code-reviewer.md`) resolve as written. Only the
-  eval fixtures (`test-pressure-*.md`, `CREATION-LOG.md`) are dropped.
+  (`../requesting-code-review/code-reviewer.md`) resolve as written. The only
+  omissions are `systematic-debugging`'s eval fixtures — `test-pressure-1.md`,
+  `test-pressure-2.md`, `test-pressure-3.md`, `test-academic.md` and
+  `CREATION-LOG.md`.
 - `skills/using-superpowers/references/kiro-tools.md` — the action → Kiro tool
   mapping (the port's only real content), plus the subagent, skill-invocation
   and steering notes.
@@ -80,7 +82,7 @@ list (`- Kiro: references/kiro-tools.md`).
 | No `Skill` tool; skills auto-activate on description match, register as `/skill-name` (CLI ≥ 2.1), and can be `read` directly | "Invoke a skill" has three sanctioned paths; reading `SKILL.md` honors the "don't bypass the mechanism" rule rather than breaking it |
 | `todo` is a real built-in tool | Task tracking maps to a tool, not to plan-file checkboxes |
 | `grep`, `glob`, `code`, `web_search`, `web_fetch` are distinct built-ins | Search and web actions map 1:1 |
-| The default subagent has the same built-in tools as the main agent | `general-purpose` maps to the default subagent, not to a named catalog agent |
+| Kiro has a built-in **general purpose** subagent, using the default agent configuration and the same built-in tools as the main agent | "Dispatch a `general-purpose` subagent" maps to it directly, not to a named catalog agent |
 | Subagents inherit steering; hooks do **not** fire on subagents | `<SUBAGENT-STOP>` in the bootstrap does the work a hook can't; subagent safety lives in `toolsSettings` |
 | Custom agents only see skills listed in `resources` | `kiro_default` gets superpowers automatically; custom agents must add `skill://.kiro/skills/*/SKILL.md` |
 

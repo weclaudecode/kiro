@@ -15,7 +15,7 @@ auto-installs. You pick the artifacts you want and copy them into either
 | `hooks/` | IDE file-event hook samples + a CLI pre-tool hook snippet | `<project>/.kiro/hooks/` (IDE) or pasted into agent JSON (CLI) |
 | `mcp/` | `mcp.json` sample with placeholders | `~/.kiro/settings/mcp.json` or `<project>/.kiro/settings/mcp.json` |
 | `settings/` | `cli.json` sample (global only) | `~/.kiro/settings/cli.json` |
-| `skills/` | Thirteen stack/workflow skills, `skill-creator`, plus the 14-skill superpowers bundle vendored verbatim from obra/superpowers (paired with `steering/superpowers-bootstrap.md`) | `~/.kiro/skills/<name>/` or `.kiro/skills/<name>/` |
+| `skills/` | Twelve stack/workflow skills, `skill-creator`, plus the 14-skill superpowers bundle vendored verbatim from obra/superpowers (paired with `steering/superpowers-bootstrap.md`) | `~/.kiro/skills/<name>/` or `.kiro/skills/<name>/` |
 | `headless/` | GitLab CI job samples + a hardened non-interactive wrapper | reference (not installed) |
 | `scripts/` | `install.sh` + `list.sh` + the manifest | run from this repo |
 
@@ -25,8 +25,11 @@ auto-installs. You pick the artifacts you want and copy them into either
   `secrets-handling.md`, `aws-security.md` globally. They're the contract
   that should hold across every project.
 - **fileMatch steering** (`python-conventions.md`,
-  `terraform-conventions.md`, etc.): also load globally — they're inert
-  outside their fileMatch glob, so there's no cost to having them loaded.
+  `terraform-conventions.md`, etc.): in the **IDE** these are inert outside
+  their glob, so global install is free. Under **`kiro-cli` inclusion modes are
+  ignored and every steering file loads on every turn** — there install them at
+  project scope, where the language actually applies, or accept the per-session
+  context cost. See `steering-guide.md`.
 - **Agents:** opt-in per use case. Install the ones you'll actually invoke
   via `/agent <name>`. Agents reference skills + steering, so install those
   first.
@@ -49,4 +52,5 @@ auto-installs. You pick the artifacts you want and copy them into either
 - `agents-guide.md` — kiro agent JSON anatomy, `toolsSettings`, subagents
 - `mcp-guide.md` — env-var pattern + secret handling + troubleshooting
 - `headless-guide.md` — non-interactive mode (CI/cron) mechanics + GitLab recipe
+- `superpowers-compatibility.md` — what the obra/superpowers port needed to behave like it does on Claude Code
 - `specs/` — design docs for changes to this catalog
