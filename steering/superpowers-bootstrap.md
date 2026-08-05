@@ -149,9 +149,12 @@ lists them:
 
 ## Subagents
 
-`subagent` is a built-in tool; the parent agent must list it in `tools`. Dispatch
-by describing the task and naming the target agent — this is **not** `/agent
-<name>`, which switches your own chat session to that agent.
+`subagent` is a built-in tool and **`kiro_default` already has it** — a default
+session can delegate with no configuration. Only a *custom* agent must opt in, by
+listing `subagent` in its `tools` array or pulling in `@builtin`; without that it
+cannot delegate. Dispatch by describing the task and naming the target agent —
+this is **not** `/agent <name>`, which switches your own chat session to that
+agent.
 
 - **"Dispatch a `general-purpose` subagent" maps directly.** Kiro ships two
   internal subagents it uses automatically: *context gathering*, and *general
@@ -183,10 +186,10 @@ places where the text is stale for this harness:
 
 - **`executing-plans` says subagents exist on "Claude Code, Codex CLI, Codex App,
   Copilot CLI, and Gemini CLI".** Kiro belongs on that list — `subagent` is a
-  built-in tool here. Read that note as *including* Kiro: when the parent agent
-  has `subagent` in its `tools`, use `superpowers:subagent-driven-development`
-  rather than executing the plan inline. Fall back to `executing-plans` only when
-  the active agent genuinely lacks the `subagent` tool.
+  built-in tool here, and `kiro_default` has it already. Read that note as
+  *including* Kiro: use `superpowers:subagent-driven-development` rather than
+  executing the plan inline. Fall back to `executing-plans` only when you are
+  running as a custom agent whose `tools` array genuinely omits `subagent`.
 - **`using-superpowers`'s "Platform Adaptation" list** points at other harnesses'
   reference files. On Kiro, this file is the one that applies.
 

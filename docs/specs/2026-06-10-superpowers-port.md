@@ -84,7 +84,8 @@ list (`- Kiro: references/kiro-tools.md`).
 | `grep`, `glob`, `code`, `web_search`, `web_fetch` are distinct built-ins | Search and web actions map 1:1 |
 | Kiro has a built-in **general purpose** subagent, using the default agent configuration and the same built-in tools as the main agent | "Dispatch a `general-purpose` subagent" maps to it directly, not to a named catalog agent |
 | Subagents inherit steering; hooks do **not** fire on subagents | `<SUBAGENT-STOP>` in the bootstrap does the work a hook can't; subagent safety lives in `toolsSettings` |
-| Custom agents only see skills listed in `resources` | `kiro_default` gets superpowers automatically; custom agents must add `skill://.kiro/skills/*/SKILL.md` |
+| Custom agents only see skills listed in `resources` | `kiro_default` gets superpowers automatically; custom agents must add **both** `skill://.kiro/skills/*/SKILL.md` and `skill://~/.kiro/skills/*/SKILL.md` — the installer's default scope is global, so a workspace-only glob sees nothing |
+| `subagent` ships in `kiro_default`; custom agents must list it in `tools` or `@builtin` | A custom agent without it silently degrades to `executing-plans` instead of `subagent-driven-development` |
 
 ## Known gaps
 

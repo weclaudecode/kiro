@@ -79,8 +79,17 @@ things wrong about kiro-cli:
   subagent's own `toolsSettings` (`write.allowedPaths`, `shell.deniedCommands`),
   never in a parent `preToolUse` hook.
 - **Custom agents must opt in.** `kiro_default` sees the skills automatically; a
-  custom agent sees only what its `resources` lists:
-  `skill://.kiro/skills/*/SKILL.md`.
+  custom agent sees only what its `resources` lists. Include **both** scopes —
+  this catalog installs globally by default, so a workspace-only glob sees
+  nothing:
+  ```json
+  "resources": [
+    "skill://.kiro/skills/*/SKILL.md",
+    "skill://~/.kiro/skills/*/SKILL.md"
+  ]
+  ```
+  The same applies to `subagent`: `kiro_default` has it, custom agents must list
+  it in `tools` (or `@builtin`) or they cannot delegate at all.
 - **No plan mode.** "Brainstorm before entering plan mode" applies to the
   `kiro_planner` agent and the spec workflow. Superpowers' own plan and spec
   files (`docs/superpowers/plans/…`, `docs/superpowers/specs/…`) are not Kiro
