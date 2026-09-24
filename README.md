@@ -31,6 +31,7 @@ cd ~/code/kiro
 | `skills/` | Twelve stack/workflow skills + `skill-creator` + the 14-skill superpowers bundle vendored verbatim from obra/superpowers (needs `steering/superpowers-bootstrap.md` to trigger) | `~/.kiro/skills/<name>/` |
 | `headless/` | GitLab CI job samples + a hardened non-interactive wrapper | reference (not installed) |
 | `scripts/` | `install.sh`, `list.sh`, `manifest.txt` | runs from this repo |
+| `ccar-f-exam-prep/` | Self-contained HTML study course for the Claude Certified Architect — Foundations exam (all 5 domains, quizzes, flashcards, 60-item mock) | open `course.html` in a browser (not installed) |
 
 ## Documentation
 
