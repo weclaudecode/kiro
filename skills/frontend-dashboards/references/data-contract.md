@@ -92,7 +92,9 @@ python3 scripts/to_rows.py csv athena-results.csv --metric UnblendedCost -o data
 ```
 
 For amortized cost, sum `savings_plan_savings_plan_effective_cost` / `reservation_effective_cost`
-for covered lines instead, or take `AmortizedCost` from Cost Explorer, and set `--metric` to match.
+for covered lines, **and** also exclude `SavingsPlanNegation`, `SavingsPlanRecurringFee` and `RIFee`
+lines. Otherwise the negation lines still subtract on-demand cost and the total is wrong. Simpler:
+take `AmortizedCost` from Cost Explorer. Either way, set `--metric` to match.
 Check the column names against your own export's schema before running this. CUR 2.0 column
 names, the tag key format (`user_<tag>`), and the partition column (`billing_period`) depend on how
 the export and its Glue table were set up. `line_item_product_code` yields codes like `AmazonEC2`,
