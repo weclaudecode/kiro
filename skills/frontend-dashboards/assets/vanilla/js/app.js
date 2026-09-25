@@ -89,7 +89,12 @@ function mount(data) {
         label: "Change %",
         numeric: true,
         csv: (v) => round(v, 4),
-        render: (v) => (v == null ? '<span class="muted">new</span>' : deltaCell(v, (x) => percent(x))),
+        render: (v, row) =>
+          v != null
+            ? deltaCell(v, (x) => percent(x))
+            : row?.prior == null
+              ? '<span class="muted">n/a</span>'
+              : '<span class="muted">new</span>', // prior was 0
       },
     ],
   });
@@ -102,7 +107,7 @@ function mount(data) {
     groupSelect.value = state.groupBy;
     const period = `${shortDate(v.range.start)} – ${shortDate(v.range.end)}`;
 
-    const d = v.prevSpend == null ? null : delta(v.spend, v.prevSpend, cur);
+    const d = delta(v.spend, v.prevSpend, cur);
     renderKpi($("kpi-spend"), {
       label: "Total spend",
       value: money(v.spend),
@@ -229,7 +234,7 @@ function deltaCell(v, fmt) {
 }
 
 function showError(err) {
-  console.error(err);
+  if (!(err instanceof DataError)) console.error(err); // expected data problems are shown on the page
   $("data-subtitle").textContent = "Data unavailable";
   $("app").innerHTML = `
     <section class="card state" data-kind="error" role="alert">

@@ -64,6 +64,9 @@ npm run build         # tsc --noEmit && vite build -> dist/ (relative base: host
 npm run typecheck
 ```
 
+The kit pins direct dependencies exactly and deliberately ships **no** `package-lock.json`: the
+lockfile belongs to the project the kit is copied into. Commit the one `npm install` generates there.
+
 ## Pitfalls
 
 | Symptom | Cause | Fix |

@@ -26,6 +26,7 @@ export function prepare(doc: unknown): Dataset {
     throw new DataError("Unexpected data shape: need { meta: { schemaVersion: 1 }, rows: [] }");
   }
   const rows = d.rows;
+  if (!rows.length) throw new DataError("The data file has no rows. Check the export's date range and filters.");
   const bad = rows.find((r) => REQUIRED.some((k) => r[k] === undefined) || typeof r.cost !== "number");
   if (bad) throw new DataError(`Row missing a required field or with non-numeric cost: ${JSON.stringify(bad)}`);
 

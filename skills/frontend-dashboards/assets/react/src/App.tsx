@@ -216,7 +216,14 @@ function BreakdownCard() {
         label: "Change %",
         numeric: true,
         csv: (r) => round(r.changePct, 4),
-        render: (v) => (v == null ? <span className="muted">new</span> : <Delta value={v as number} fmt={(x) => percent(x)} />),
+        render: (v, row) =>
+          v != null ? (
+            <Delta value={v as number} fmt={(x) => percent(x)} />
+          ) : row?.prior == null ? (
+            na
+          ) : (
+            <span className="muted">new</span> // prior was 0
+          ),
       },
     ];
   }, [cents]);

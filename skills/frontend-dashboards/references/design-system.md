@@ -1,7 +1,13 @@
 # Design system
 
 The kit's look comes from two files: `css/tokens.css` (values) and `css/components.css` (patterns).
-The React track mirrors both under `src/styles/`. If you change one copy, change the other.
+The React track mirrors both under `src/styles/`. If you change one copy, change the other, then
+confirm they only differ in the header comment:
+
+```bash
+cd assets && diff <(sed 4d vanilla/css/tokens.css) <(sed 4d react/src/styles/tokens.css) \
+  && diff <(sed 3d vanilla/css/components.css) <(sed 3d react/src/styles/components.css) && echo in sync
+```
 
 ## Tokens: roles, not values
 

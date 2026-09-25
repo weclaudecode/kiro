@@ -67,4 +67,4 @@ await browser.close();
 - [ ] Real cost data is not committed to git and not hosted publicly. Hosting sits behind auth.
 - [ ] If hosted: a CSP of `default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:`.
       `'unsafe-inline'` for styles is required because ECharts, the share bars, and the skeletons set inline `style`.
-      Vanilla also needs a `sha256-` hash for the inline theme script, or move that script to a file.
+      Both kits' `index.html` have an inline theme script: add its `sha256-` hash to `script-src`, or move it to a file.

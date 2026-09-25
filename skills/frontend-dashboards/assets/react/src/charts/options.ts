@@ -29,7 +29,7 @@ export function base(t: ChartTokens) {
 
 const valueAxis = (t: ChartTokens, formatter: Fmt) => ({
   type: "value",
-  axisLabel: { color: t.muted, formatter },
+  axisLabel: { color: t.muted, formatter, hideOverlap: true },
   splitLine: { lineStyle: { color: t.grid } },
   axisLine: { show: false },
   axisTick: { show: false },

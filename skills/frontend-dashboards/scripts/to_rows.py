@@ -124,6 +124,8 @@ def validate(path: str) -> int:
     if not isinstance(rows, list):
         errors.append("rows missing")
         rows = []
+    elif not rows:
+        errors.append("rows is empty: the dashboard needs at least one row (check the export's date range and filters)")
     for i, r in enumerate(rows):
         missing = [k for k in REQUIRED if k not in r]
         if missing:
@@ -144,7 +146,7 @@ def validate(path: str) -> int:
     print(f"ok: {len(rows)} rows, {meta.get('start')}..{meta.get('end')}, total {total:,.2f} {meta.get('currency')}")
     print(f"    distinct: {dims}; payload {size_kb:,.0f} KB")
     if len(rows) > 200_000 or size_kb > 20_000:
-        print("    warn: large for in-browser aggregation; pre-aggregate (see references/performance.md)")
+        print("    warn: large for in-browser aggregation; pre-aggregate (see 'Size and hosting' in references/data-contract.md)")
     return 0
 
 

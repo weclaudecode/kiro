@@ -5,6 +5,7 @@ import { esc } from "../format.js";
 /**
  * createTable(root, options)
  *   columns: [{ key, label, numeric?, total?, render?(value, row) -> HTML string, csv?(value, row) -> string }]
+ *   render() is also called for the footer total with row = null (value null when the column is all null)
  *   searchKeys: keys matched by the search box (case-insensitive substring)
  *   defaultSort: { key, dir: "asc" | "desc" }
  *   pageSize: rows per page (default 25)
@@ -126,8 +127,9 @@ export function createTable(root, options) {
           .map((c, i) => {
             if (i === 0) return "<td>Total</td>";
             if (!c.total) return "<td></td>";
-            const sum = view.reduce((s, r) => s + (Number(r[c.key]) || 0), 0);
-            return `<td class="num">${c.render ? c.render(sum, {}) : esc(sum)}</td>`;
+            // All-null column (e.g. no previous period): total is "n/a", not a fake 0.
+            const sum = view.every((r) => r[c.key] == null) ? null : view.reduce((s, r) => s + (Number(r[c.key]) || 0), 0);
+            return `<td class="num">${c.render ? c.render(sum, null) : esc(sum ?? "")}</td>`;
           })
           .join("")}</tr>`
       : "";

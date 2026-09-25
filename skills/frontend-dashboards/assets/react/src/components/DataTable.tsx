@@ -157,10 +157,11 @@ export function DataTable<T extends object>({
                 {columns.map((c, i) => {
                   if (i === 0) return <td key={c.key}>Total</td>;
                   if (!c.total) return <td key={c.key} />;
-                  const sum = view.reduce((s, r) => s + (Number(r[c.key]) || 0), 0);
+                  // All-null column (e.g. no previous period): total is "n/a", not a fake 0.
+                  const sum = view.every((r) => r[c.key] == null) ? null : view.reduce((s, r) => s + (Number(r[c.key]) || 0), 0);
                   return (
                     <td key={c.key} className="num">
-                      {c.render ? c.render(sum as T[keyof T], null) : sum}
+                      {c.render ? c.render(sum as T[keyof T], null) : (sum ?? "")}
                     </td>
                   );
                 })}

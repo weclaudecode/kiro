@@ -32,6 +32,7 @@ export function prepare(doc) {
   if (bad) throw new DataError(`Row missing a required field or with non-numeric cost: ${JSON.stringify(bad)}`);
 
   const rows = doc.rows;
+  if (!rows.length) throw new DataError("The data file has no rows. Check the export's date range and filters.");
   const dims = {
     accounts: uniqueSorted(rows, "accountName"),
     environments: uniqueSorted(rows, "environment"),

@@ -41,9 +41,10 @@ export function percent(ratio, decimals = 1) {
   return f.format(ratio);
 }
 
-// Signed delta for text. Returns { text, dir } where dir drives color (up = spend grew = bad).
+// Signed delta for text. Returns { text, dir } where dir drives color (up = spend grew = bad),
+// or null when there is no usable baseline (missing or $0 previous period).
 export function delta(current, previous, code = "USD") {
-  if (!previous) return { text: "no prior data", pct: null, dir: "flat" };
+  if (!previous) return null;
   const diff = current - previous;
   const pct = diff / previous;
   const dir = Math.abs(pct) < 0.005 ? "flat" : diff > 0 ? "up" : "down";

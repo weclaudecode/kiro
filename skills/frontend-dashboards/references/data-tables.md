@@ -11,7 +11,7 @@ Vanilla: `createTable(root, options).setRows(rows)`. React: `<DataTable rows row
   label: "Cost",          // header text (also the CSV header)
   numeric: true,          // right-aligned, tabular numbers, first sort click = descending
   total: true,            // sum shown in <tfoot> over the searched view (not just the page)
-  render: (v, row) => ..., // vanilla: HTML string (escape it!); React: ReactNode. row is null in the footer
+  render: (v, row) => ..., // vanilla: HTML string (escape it!); React: ReactNode. row is null in the footer (value is null when the whole column is null)
   csv: (v|row) => ...,     // raw export value; round floats here
 }
 ```

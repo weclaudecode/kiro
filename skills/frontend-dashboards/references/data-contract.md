@@ -82,13 +82,17 @@ SELECT
   round(sum(line_item_unblended_cost), 4)                      AS "cost"
 FROM cur2
 WHERE billing_period BETWEEN '2026-06' AND '2026-09'
-  AND line_item_line_item_type IN ('Usage', 'DiscountedUsage', 'SavingsPlanCoveredUsage')
+  -- Unblended = everything on the bill except credits/refunds/tax. Keeping SavingsPlanNegation,
+  -- RIFee, SavingsPlanRecurringFee and Fee lines is what makes the total match Cost Explorer.
+  AND line_item_line_item_type NOT IN ('Credit', 'Refund', 'Tax')
 GROUP BY 1, 2, 3, 4, 5, 6
 ```
 ```bash
 python3 scripts/to_rows.py csv athena-results.csv --metric UnblendedCost -o data/costs.json
 ```
 
+For amortized cost, sum `savings_plan_savings_plan_effective_cost` / `reservation_effective_cost`
+for covered lines instead, or take `AmortizedCost` from Cost Explorer, and set `--metric` to match.
 Check the column names against your own export's schema before running this. CUR 2.0 column
 names, the tag key format (`user_<tag>`), and the partition column (`billing_period`) depend on how
 the export and its Glue table were set up. `line_item_product_code` yields codes like `AmazonEC2`,
