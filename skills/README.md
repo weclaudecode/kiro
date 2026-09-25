@@ -104,6 +104,14 @@ This README is the index: what each skill does and when to reach for it. For the
 
 ---
 
+## frontend-dashboards
+
+**What it does.** Frontend-developer skill for data dashboards in the browser — KPI/stat cards, ECharts charts, data tables with sort/search/pagination/totals/CSV export, a filter bar with URL-synced state and cross-filtering, light/dark theming from design tokens. Ships two runnable starter kits with the same AWS cost analysis dashboard: zero-build vanilla HTML/CSS/JS (default; one pinned, SRI-checked ECharts) and Vite + React 19 + TypeScript strict + Redux Toolkit / react-redux 9. Both share a data contract, a CVD-validated chart palette, and the same state/selector model. Scripts generate realistic sample cost data and convert Cost Explorer JSON or CUR/Athena CSV into the contract. References cover chart selection, tables, state, React/Redux patterns, cost semantics (unblended vs amortized, credits), and a pre-ship quality checklist (browser screenshots, a11y, perf, security).
+
+**When to use.** Building a new dashboard page (cost, usage, inventory, KPIs) from static JSON/CSV; adding widgets, filters, or cross-filtering to one; fixing layout, dark mode, accessibility, or performance issues; or moving a vanilla dashboard to React/Redux. The `dashboard-builder` agent loads it. For Powerpipe HCL dashboards use `powerpipe-reporting`; for the data behind the page use `aws-cost-analyst` / `steampipe`.
+
+---
+
 ## terraform-aws
 
 **What it does.** Production Terraform on AWS — project structure, remote state on S3 + DynamoDB, module design, provider configuration, AWS-specific patterns (IAM, VPC, KMS), variable validation, lifecycle and meta-arguments, drift management, and testing with `terraform validate`, tflint, checkov, and terratest.
@@ -131,6 +139,7 @@ Several skills assume context from others. Common chains:
 - `kubernetes-eks` → `terraform-aws` / `terragrunt-multi-account` (cluster + IRSA IaC) → `aws-solution-architect` (topology); `security-code-reviewer` (manifest review)
 - `automation-solutions` → `security-code-reviewer` (the agents it runs in hooks) + `gitlab-pipeline` (pipeline-troubleshooter context)
 - `gitlab-duo-review` → `gitlab-pipeline` (enforceable CI gates that hints must not replace) + `security-code-reviewer` (repeatable low-severity checks that make good Duo hints)
+- `frontend-dashboards` ← `steampipe` / `powerpipe-reporting` / `aws-cost-analyst` (data exports it renders)
 - `powerpipe-reporting` → `steampipe` (query/connection layer) → `terragrunt-multi-account` (audit-role layout) + `gitlab-pipeline` (CI publish job)
 
 ## Adding a new skill

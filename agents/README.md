@@ -22,6 +22,7 @@ Install one with `scripts/install.sh` (it lands in `~/.kiro/agents/` or
 | `pipeline-troubleshooter` | Diagnoses a **pasted** CI trace, emits root-cause JSON (cron-friendly) | `read` | no |
 | `gitlab-ci-troubleshooter` | **Pulls** a failing pipeline's logs via `glab` and reports the root cause | `read`, `shell`, `@git` | no |
 | `powerpipe-report-author` | Authors/runs Powerpipe dashboards + benchmarks over Steampipe, per environment | `read`, `write`, `shell` | yes (prompts) |
+| `dashboard-builder` | Builds/changes browser dashboards (KPIs, ECharts, tables, filters) from static JSON — vanilla or React/TS/Redux kits | `read`, `write`, `shell` | yes (prompts) |
 | `aws-cost-analyst` | FinOps: estimates (Pricing MCP) + actual per-env spend (Cost Explorer MCP) + waste→savings | `read`, `@mcp` | no |
 | `python-lambda-author` | Scaffolds Powertools Lambda handlers, tests, packaging | `read`, `write`, `shell` | yes (prompts) |
 | `eks-troubleshooter` | **Pulls** Kubernetes/EKS evidence via `kubectl` (GET-only) + EKS/CloudWatch MCP and reports root cause | `read`, `shell`, `use_aws`, `@git` | no |

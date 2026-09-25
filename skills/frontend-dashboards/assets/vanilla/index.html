@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AWS Cost Analysis</title>
+    <meta name="description" content="AWS spend by service, account and environment with period-over-period change." />
+    <!-- Apply saved theme before first paint so there is no light flash in dark mode. -->
+    <script>
+      try {
+        const t = localStorage.getItem("theme");
+        if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
+      } catch {}
+    </script>
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <!-- Pinned + SRI. To upgrade: bump the version, recompute the hash (see references/charts.md). -->
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/echarts@6.1.0/dist/echarts.min.js"
+      integrity="sha384-C2iskrW/uPW46KzOjrvJIQo4YkV8lkD+QS0CrDN18IIPIpT/g2USu8bTP3nvmIAD"
+      crossorigin="anonymous"
+    ></script>
+    <script type="module" src="js/app.js"></script>
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <h1>AWS Cost Analysis</h1>
+        <p class="subtitle" id="data-subtitle">Loading data&hellip;</p>
+      </div>
+      <button type="button" class="btn btn-ghost" id="theme-toggle" aria-label="Toggle dark mode">Theme</button>
+    </header>
+
+    <main class="app-main" id="app">
+      <section class="filter-bar" id="filters" aria-label="Filters"></section>
+
+      <section class="kpi-grid" aria-label="Key figures">
+        <article class="card kpi" id="kpi-spend"></article>
+        <article class="card kpi" id="kpi-daily"></article>
+        <article class="card kpi" id="kpi-forecast"></article>
+        <article class="card kpi" id="kpi-top"></article>
+      </section>
+
+      <section class="grid">
+        <article class="card span-12">
+          <header class="card-header">
+            <div>
+              <h2 class="card-title">Daily spend by service</h2>
+              <p class="card-subtitle">Top 7 services by total spend; the rest grouped as Other</p>
+            </div>
+          </header>
+          <div class="card-body"><div class="chart" id="chart-trend"></div></div>
+        </article>
+
+        <article class="card span-6">
+          <header class="card-header">
+            <div>
+              <h2 class="card-title">Spend by account</h2>
+              <p class="card-subtitle">Click a bar to filter to that account</p>
+            </div>
+          </header>
+          <div class="card-body"><div class="chart chart-sm" id="chart-accounts"></div></div>
+        </article>
+
+        <article class="card span-6">
+          <header class="card-header">
+            <div>
+              <h2 class="card-title">Top movers</h2>
+              <p class="card-subtitle" id="movers-subtitle">Change vs previous period, by service</p>
+            </div>
+          </header>
+          <div class="card-body"><div class="chart chart-sm" id="chart-movers"></div></div>
+        </article>
+
+        <article class="card span-12">
+          <header class="card-header">
+            <div>
+              <h2 class="card-title">Cost breakdown</h2>
+              <p class="card-subtitle">Click a row to filter the dashboard to it</p>
+            </div>
+            <div class="field">
+              <label for="group-by">Group by</label>
+              <select class="select" id="group-by">
+                <option value="service">Service</option>
+                <option value="accountName">Account</option>
+                <option value="environment">Environment</option>
+                <option value="region">Region</option>
+              </select>
+            </div>
+          </header>
+          <div id="breakdown-table"></div>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

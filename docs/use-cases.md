@@ -25,6 +25,7 @@ the headless invocation. Agents are invoked interactively with
 | Review an MR end-to-end | `mr-reviewer` | (diff-driven) | — | ✔ |
 | Coordinate a multi-faceted review | `platform-orchestrator` | (delegates) | — | — |
 | Inventory / audit the estate | (Steampipe) | `steampipe`, `powerpipe-reporting` | — | ✔ (cron) |
+| Build a data dashboard (e.g. AWS cost analysis) | `dashboard-builder` | `frontend-dashboards` | — | — |
 
 ## By task
 
@@ -77,6 +78,16 @@ the headless invocation. Agents are invoked interactively with
   `skills/kubernetes-eks/scripts/triage.sh` into
   `--no-interactive --agent eks-troubleshooter` (nightly job included in
   the CI sample).
+
+### Dashboards (frontend)
+- **Build/change a dashboard:** `/agent dashboard-builder` — KPI cards,
+  ECharts charts, sortable/searchable tables with CSV export, filter bar
+  with cross-filtering, light/dark. Starts from the `frontend-dashboards`
+  skill's kits: zero-build vanilla HTML/CSS/JS (default) or Vite + React +
+  TypeScript + Redux Toolkit. Feed it static JSON exported from Cost
+  Explorer / CUR-Athena / Steampipe (`scripts/to_rows.py`) or generated
+  sample data. Pairs with `aws-cost-analyst` for the numbers and
+  `powerpipe-reporting` when an HCL dashboard is enough.
 
 ### Python
 - **Lambda:** `/agent python-lambda-author` (Powertools handlers, tests,

@@ -14,6 +14,7 @@ file|steering/lambda-conventions.md|steering/lambda-conventions.md
 file|steering/gitlab-ci-conventions.md|steering/gitlab-ci-conventions.md
 file|steering/kubernetes-conventions.md|steering/kubernetes-conventions.md
 file|steering/powerpipe-reporting.md|steering/powerpipe-reporting.md
+file|steering/frontend-dashboards.md|steering/frontend-dashboards.md
 file|steering/superpowers-bootstrap.md|steering/superpowers-bootstrap.md
 
 file|agents/terraform-reviewer.json|agents/terraform-reviewer.json
@@ -31,6 +32,7 @@ file|agents/aws-cost-analyst.json|agents/aws-cost-analyst.json
 file|agents/eks-troubleshooter.json|agents/eks-troubleshooter.json
 file|agents/platform-orchestrator.json|agents/platform-orchestrator.json
 file|agents/gitlab-duo-instructions-author.json|agents/gitlab-duo-instructions-author.json
+file|agents/dashboard-builder.json|agents/dashboard-builder.json
 
 file|prompts/new-lambda.md|prompts/new-lambda.md
 file|prompts/new-terraform-module.md|prompts/new-terraform-module.md
@@ -54,6 +56,7 @@ dir|skills/python-lambda|skills/python-lambda
 dir|skills/security-code-reviewer|skills/security-code-reviewer
 dir|skills/steampipe|skills/steampipe
 dir|skills/powerpipe-reporting|skills/powerpipe-reporting
+dir|skills/frontend-dashboards|skills/frontend-dashboards
 dir|skills/terraform-aws|skills/terraform-aws
 dir|skills/terragrunt-multi-account|skills/terragrunt-multi-account
 dir|skills/skill-creator|skills/skill-creator

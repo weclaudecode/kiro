@@ -1,0 +1,5 @@
+# Sample data is generated, not committed: python3 scripts/gen_sample_costs.py -o <dir>/costs.json
+assets/*/data/costs.json
+assets/react/public/data/costs.json
+assets/react/node_modules/
+assets/react/dist/
